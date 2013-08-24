@@ -1,0 +1,26 @@
+measured power consumption  @ 3V
+
+counting / idle
+
+4 digits
+b1 = 1.3mA / 0.7mA
+b2 = 1.8mA / 1.4mA
+b3 = 4.0mA / 3.5mA
+b4 = 10mA / 9.5mA
+
+2 digits
+b1 = 1.2mA / 0.6mA
+b2 = 1.5mA / 0.9mA
+b3 = 2.6mA / 2.1mA
+b4 = 6.2mA / 5.6mA
+
+
+working with a 2mA ballpark estimate, we have...
+
+Powered by 2x AA  @ 2000mAh = 40 days
+Powered by 2x AAA @ 1000mAh = 20 days
+Powered by 1x coin cell @ 500mAh = 10 days
+
+... these figures actually aren't that bad,
+considering a long night in Leamington would be
+only 1/4 of a day...

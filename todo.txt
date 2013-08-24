@@ -1,0 +1,45 @@
+Exposure Timer MkII TODO:
+
+[x] put in brightness adjustment.
+
+[x] display remaining exposure count.
+ [x] option 1: press Select to toggle, like the BF currently does.
+ [n] option 2: be a geek, and display counts < 16 in binary on the DP leds. :)
+  -> tried it; it's really not that readable.
+
+[x] ability to save settings in eeprom.
+ [x] brightness
+ [ ] ???
+
+[x] use idle mode--no busy loops.
+
+[x] save power by eliminating leading zeroes. :D
+
+[x] fix the sleep code; counting sleeps does not really work
+    because we don't know that the MCU will actually get to sleep
+    between every interrupt.  
+
+[x] eliminate state-change latency in auto state changes
+
+[?] see if we can't get rid of that nasty flicker on startup.
+  -> maybe initializing the frame buffer would help. :P
+   -> you'd think...
+
+[ ] clean up code a bit...
+ [ ] make symbolic names for all display digits
+ [ ] be consistent in '\xZZ' use (and see if it saves us anything)
+
+[ ] double-buffer the display to prevent flicker.
+  -> will transfer to the frame buffer with interrupts disabled.
+   -> actually, I'm skeptical here.  we only draw one character per interrupt.
+      so we can have partial displays either way.  so long as I'm drawing the
+      display in a spatially localized way, this might not matter.
+
+[ ] power save mode...
+ [ ] put MCU in power save mode after idle timeout
+   [ ] wake up MCU by pushing a button. :D
+ [ ] dim and/or turn off LEDs during long exposure?
+   -> can currently do this manually...
+
+[ ] real-time clock mode.  depends on power-save mode above.
+
