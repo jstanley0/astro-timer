@@ -56,7 +56,7 @@ void Sleep(uint16_t kiloclocks)
 
 
 // inverted since we're using a common anode display
-uint8_t digits[10] PROGMEM = {
+const uint8_t digits[10] PROGMEM = {
 	~0x3f, // 0 = 00111111
 	~0x06, // 1 = 00000110
 	~0x5b, // 2 = 01011011
