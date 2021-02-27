@@ -1,0 +1,7 @@
+hardware/gerber
+hardware/fp-info-cache
+.DS_Store
+.idea
+*.elf
+*.hex
+*.o
