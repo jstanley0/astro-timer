@@ -473,25 +473,25 @@ F 3 "" H 3650 1300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L sparkfun-batts:BATTERY-AAA BT1
-U 1 1 603EB8A6
-P 3150 1600
-F 0 "BT1" H 3268 1696 50  0000 L CNN
-F 1 "Battery_Cell" H 3268 1605 50  0000 L CNN
-F 2 "sparkfun-batteries:BATTERY-AAA" V 3150 1660 50  0001 C CNN
-F 3 "~" V 3150 1660 50  0001 C CNN
-	1    3150 1600
-	0    1    1    0   
-$EndComp
-$Comp
 L sparkfun-batts:BATTERY-AAA BT2
-U 1 1 603EBBDC
+U 1 1 603EB8A6
 P 3150 2000
-F 0 "BT2" H 3268 2096 50  0000 L CNN
-F 1 "Battery_Cell" H 3268 2005 50  0000 L CNN
+F 0 "BT2" V 3100 2200 50  0000 L CNN
+F 1 "Battery_Cell" V 3200 2200 50  0000 L CNN
 F 2 "sparkfun-batteries:BATTERY-AAA" V 3150 2060 50  0001 C CNN
 F 3 "~" V 3150 2060 50  0001 C CNN
 	1    3150 2000
+	0    1    1    0   
+$EndComp
+$Comp
+L sparkfun-batts:BATTERY-AAA BT1
+U 1 1 603EBBDC
+P 3150 1600
+F 0 "BT1" V 3100 1800 50  0000 L CNN
+F 1 "Battery_Cell" V 3200 1800 50  0000 L CNN
+F 2 "sparkfun-batteries:BATTERY-AAA" V 3150 1660 50  0001 C CNN
+F 3 "~" V 3150 1660 50  0001 C CNN
+	1    3150 1600
 	0    1    1    0   
 $EndComp
 Wire Wire Line
