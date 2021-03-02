@@ -2,64 +2,15 @@
 // based on AVR ATMEGA48 running at 1MHz (default fuses okay)
 // build with avr-gcc
 //
-// Source code (c) 2007 by Jeremy Stanley
-// http://www.xmission.com/~jstanley/avrtimer.html
+// Source code (c) 2007-2021 by Jeremy Stanley
+// https://github.com/jstanley0/astro-timer
 // Licensed under GNU GPL v2 or later
-//
-
-// Port assignments:
-// PORTB0..3 (output) = Digit anode drivers
-// PORTB4    (output) = colon / apostrophe anodes
-// PORTB5    (output) = Optoisolator to camera
-// PORTB6..7          = 32.768kHz watch crystal
-// PORTC3    (input)  = Select key
-// PORTC4    (input)  = Set key
-// PORTC5    (input)  = Start key
-// PORTD0..7 (output) = Segment cathodes (PD7 = A, PD6 = B, ... PD0 = DP)
-
-
-// for portability, please put all explicit port references here and init_io()
-#define DIGITS_OFF()   PORTB &= 0b11100000;
-#define DIGIT_ON(x)    PORTB |= (1 << x)
-
-#define SHUTTER_OFF()  PORTB &= ~(1 << PB5)
-#define SHUTTER_ON()   PORTB |= (1 << PB5)
-
-#define DIGIT_VALUE(x) PORTD = x
-
-#define BUTTON_STATE() ((PINC & 0b111000) >> 3)
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 #include <avr/sleep.h>
-
-//#define TEST_DISPLAY
-#ifdef TEST_DISPLAY
-#include <util/delay.h>
-#endif
-
-void init_io()
-{
-    DDRB  = 0b00111111;
-    PORTB = 0b00000000;
-    DDRC  = 0b00000000;
-    PORTC = 0b00111000;
-    DDRD  = 0b11111111;
-    PORTD = 0b11111111;
-
-#ifdef TEST_DISPLAY
-    for(uint8_t digit = 1; digit != 0b100000; digit <<= 1) {
-        PORTB &= 0b11100000;
-        PORTB |= digit;
-        for(uint8_t segment = 1; segment != 0; segment <<= 1) {
-            PORTD = ~segment;
-            _delay_ms(100);
-        }
-    }
-#endif
-}
 
 // Put the processor in idle mode for the specified number of "kiloclocks"
 // (= periods of 1024 clock cycles)
@@ -92,104 +43,12 @@ void Sleep(uint16_t kiloclocks)
     TCCR1B = 0;                // stop the timer
 }
 
-// 0 = on since we're using a common anode display
-const uint8_t digits[10] PROGMEM = {
-    0b00000011, // 0
-    0b10011111, // 1
-    0b00100101, // 2
-    0b00001101, // 3
-    0b10011001, // 4
-    0b01001001, // 5
-    0b11000001, // 6
-    0b00011111, // 7
-    0b00000001, // 8
-    0b00011001, // 9
-};
-#define DECIMAL_POINT 1
-#define LETTER_C 0b01100011
-#define LETTER_L 0b11100011
-#define LETTER_B 0b11000001
-#define LETTER_S 0b01001001
-#define LETTER_A 0b00010001
-#define LETTER_V 0b10000011
-#define LETTER_E 0b01100001
+void state_delay() {
 
-static void clock_start() {
-    TCNT2 = 0;
-    TIFR2 = (1 << TOV2);
-    TIMSK2 |= (1 << TOIE2);
-}
-
-static void clock_stop() {
-    TIMSK2 &= (uint8_t)~(1 << TOIE2);
-}
-
-// Refresh interrupt - refreshes the next digit on the display.
-// By drawing each in turn quickly enough, we give the illusion of
-// a solid display, but without requiring the output ports and wiring
-// to drive each digit independently.
-
-volatile uint8_t display[5] = { '\xff', '\xff', '\xff', '\xff', '\xff' };
-ISR(TIMER0_OVF_vect)
-{
-    static uint8_t didx = 0;
-    DIGIT_VALUE(display[didx]);
-    DIGIT_ON(didx);
-    if (++didx == 5)
-        didx = 0;
-}
-
-
-// Blanking interrupt - clears the display prior to the next refresh.
-// We need to turn the digits off before switching segments to
-// prevent ghosting caused by the wrong value being briefly displayed.
-// By changing the value of OCR0A, we can control the effective
-// brightness of the display.
-
-ISR(TIMER0_COMPA_vect)
-{
-    DIGITS_OFF();
 }
 
 
 
-
-// Timer interrupt service routine
-// Executes once per second, driven by the 32.768khz xtal
-
-volatile int8_t gMin, gSec;
-volatile int8_t gDirection = -1;
-
-ISR(TIMER2_OVF_vect)
-{
-    if (gDirection > 0) {
-        // counting up...
-        if (++gSec == 60) {
-            gSec = 0;
-            if (++gMin == 100) {
-                gMin = 0;
-            }
-        }
-    }
-    else if (gDirection < 0) {
-        // counting down...
-        if (gSec == 0) {
-            if (gMin > 0) {
-                gSec = 59;
-                gMin--;
-            } else {
-                // the down-timer started at 0
-                // (we just finished a sub-second delay)
-                gDirection = 0;
-            }
-        } else {
-            if (--gSec == 0 && gMin == 0) {
-                // time has elapsed.
-                gDirection = 0;
-            }
-        }
-    }
-}
 
 void IntToDigs2(int n, uint8_t digs[4])
 {
@@ -230,85 +89,14 @@ void IntToDigs4(int n, uint8_t digs[4])
 */
 
 
-// here's how button presses work:
-// - a press is registered when a button is released.
-// - a hold is registered when the same button has been down
-//   for a specified number of cycles.  the button release
-//   following the hold does not register.
 
-#define BUTTON_SET    0x01
-#define BUTTON_SELECT  0x02
-#define BUTTON_START 0x04
-#define BUTTON_HOLD  0x10     // button was held
-
-#define REPEAT_THRESHOLD 15
-
-uint8_t GetButtons()
-{
-    static uint8_t prevState = 0xff;
-    static uint8_t repeat = 0;
-
-    uint8_t curState = BUTTON_STATE();
-
-    // if we've already registered a "hold"
-    if (repeat >= REPEAT_THRESHOLD) {
-        prevState = curState;
-        if (curState == 7)
-            repeat = 0;    // no buttons are down.
-        return 0;
-    }
-
-    if (curState != prevState) {
-        uint8_t pressed = ~prevState & curState;
-        prevState = curState;
-        return pressed;
-    } else if (curState != 7) {
-        // button(s) are being held
-        if (++repeat == REPEAT_THRESHOLD) {
-            return BUTTON_HOLD | ~(curState & 7);
-        }
-    }
-
-    return 0;
-}
-
-static const uint8_t brighttable[4] PROGMEM = { 255, 85, 28, 9 };
-
-
-#define HIGH_POS 0
-#define LOW_POS  2
-#define EMPTY '\xFF'
-#define EXTRA_POS 4
-#define COLON 0b01111111
-#define APOS 0b11111110
-
-// strip - bit 0 = don't display tens place if num < 10
-//         bit 1 = ...           ones place if num == 0
-// dp = bit 0 = low digit decimal point on; bit 1 = high digit decimal point on
-static void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uint8_t dp)
-{
-    uint8_t digs[2];
-
-    if (TCNT2 & blink_mask) {
-        display[pos] = EMPTY;
-        display[pos + 1] = EMPTY;
-    } else {
-        IntToDigs2(num, digs);
-        display[pos] = ((strip & 1) && (num < 10)) ? EMPTY
-            : pgm_read_byte(&digits[digs[0]]);
-        if (dp & 2) display[pos] ^= DECIMAL_POINT;
-        display[pos + 1] = ((strip & 2) && (num == 0)) ? EMPTY
-            : pgm_read_byte(&digits[digs[1]]);
-        if (dp & 1) display[pos + 1] ^= DECIMAL_POINT;
-    }
-}
 
 static unsigned char EditNum(uint8_t *num, uint8_t buttons, uint8_t max)
 {
     if (buttons == 0)
         return 0;
 
-    TCNT2 = 0;    // reset blinkage when a key is pressed
+    display_blink_reset();
 
     if (buttons & BUTTON_SELECT) {
         if (buttons & BUTTON_HOLD)
@@ -323,14 +111,6 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, uint8_t max)
         *num = 0;
 
     return (buttons & BUTTON_SET);
-}
-
-static void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp)
-{
-    display[0] = letter ^ ((dp & 8) ? DECIMAL_POINT : 0);
-    display[1] = EMPTY ^ ((dp & 4) ? DECIMAL_POINT : 0);
-    display[4] = EMPTY;
-    DisplayNum(num, LOW_POS, blink_mask, (blink_mask == 0) ? 1 : 0, dp);
 }
 
 enum State {
@@ -348,47 +128,6 @@ enum State {
     ST_RUN_AUTO, ST_WAIT
 };
 
-// params
-uint8_t stime[2] = { 0, 0 };
-uint8_t delay[2] = { 0, 0 };
-uint8_t count    = 1;
-uint8_t mlu      = 0;
-uint8_t bright   = 1;
-
-inline void savebyte(uint16_t addr, uint8_t value)
-{
-    eeprom_write_byte((uint8_t *)addr, value);
-}
-
-uint8_t loadbyte(uint16_t addr, uint8_t default_value, uint8_t max_value)
-{
-    uint8_t ret = eeprom_read_byte((uint8_t *) addr);
-    if (ret > max_value)
-        ret = default_value;
-    return ret;
-}
-
-void Save()
-{
-    savebyte(0, stime[0]);
-    savebyte(1, stime[1]);
-    savebyte(2, delay[0]);
-    savebyte(3, delay[1]);
-    savebyte(4, count);
-    savebyte(5, mlu);
-    savebyte(6, bright);
-}
-
-void Load()
-{
-    stime[0] = loadbyte(0, 0, 99);
-    stime[1] = loadbyte(1, 0, 59);
-    delay[0] = loadbyte(2, 0, 99);
-    delay[1] = loadbyte(3, 0, 59);
-    count    = loadbyte(4, 1, 99);
-    mlu      = loadbyte(5, 0, 99);
-    bright   = loadbyte(6, 1, 3);
-}
 
 void InitRun(enum State *state)
 {
@@ -413,48 +152,16 @@ void InitRun(enum State *state)
     clock_start();
 }
 
-
 int main(void)
 {
-    // Initialize I/O
     init_io();
 
     // Load saved state, if any
     Load();
 
-    // Setup the display timer...
-
-    // prescaler 1/8; at 1MHz system clock, this gives us an overflow
-    // at 488 Hz, providing a per-digit refresh rate of 97.6 Hz.
-    TCCR0A = 0;
-    TCCR0B = (1<<CS01);
-
-    // Output compare value B - controls blanking.
-    // In full brightness mode, we'll make this happen immediately before the refresh,
-    // In lower brightness modes, we'll make it happen sooner.
-    OCR0A = pgm_read_byte(&brighttable[bright]);
-
-    // Enable overflow and compare match interrupts
-    TIMSK0 = (1<<TOIE0) | (1<<OCIE0A);
-
-
-    // Setup the RTC...
-    gMin = 0;
-    gSec = 0;
-
-    // select asynchronous operation of Timer2
-    ASSR = (1<<AS2);
-
-    // select prescaler: 32.768 kHz / 128 = 1 sec between each overflow
-    TCCR2A = 0;
-    TCCR2B = (1<<CS22) | (1<<CS20);
-
-    // wait for TCN2UB and TCR2UB to be cleared
-    while((ASSR & 0x01) | (ASSR & 0x04));
-
-    // clear interrupt-flags
-    TIFR2 = 0xFF;
-
+    display_init();
+    rtc_init();
+    input_init();
 
     // init the state machine
     enum State state = ST_TIME;
@@ -468,7 +175,8 @@ int main(void)
     // Do some stuff
     for(;;)
     {
-        uint8_t buttons = GetButtons();
+        // note that this puts the processor to sleep for up to 50ms
+        uint8_t buttons = input_poll();
 
         if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
             prevstate = state;
@@ -537,7 +245,7 @@ int main(void)
                 state = ST_TIME;
             } else if (buttons & BUTTON_SET) {
                 bright = (bright - 1) & 3;
-                OCR0A = pgm_read_byte(&brighttable[bright]);
+                display_set_brightness(bright);
             } else if (buttons & BUTTON_START) {
                 Save();
                 state = ST_SAVED;
@@ -701,11 +409,9 @@ int main(void)
             } else if (buttons & BUTTON_SET) {
                 // adjust brightness
                 bright = (bright - 1) & 3;
-                OCR0A = pgm_read_byte(&brighttable[bright]);
+                display_set_brightness(bright);
             }
         }
-
-        Sleep(48);    // approx 50ms at 1MHz
      }
 }
 
