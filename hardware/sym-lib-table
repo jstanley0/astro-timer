@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name en11)(type Legacy)(uri /Users/jeremy/Downloads/LIB_EN11-HSM1AF15-2/EN11-HSM1AF15/KiCad/EN11-HSM1AF15.lib)(options "")(descr ""))
+  (lib (name sj1-2503a)(type Legacy)(uri /Users/jeremy/Downloads/SJ1-2503A-2/SJ1-2503A.lib)(options "")(descr ""))
+  (lib (name sparkfun-batts)(type Legacy)(uri /Users/jeremy/Documents/KiCad-parts/SparkFun-KiCad-Libraries/Libraries/SparkFun-Batteries.lib)(options "")(descr ""))
+)

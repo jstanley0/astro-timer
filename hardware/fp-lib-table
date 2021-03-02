@@ -1,0 +1,8 @@
+(fp_lib_table
+  (lib (name eg1218)(type KiCad)(uri /Users/jeremy/Downloads/ul_EG1218/KiCAD/2021-03-02_02-20-25/footprints.pretty)(options "")(descr ""))
+  (lib (name en11)(type KiCad)(uri /Users/jeremy/Downloads/LIB_EN11-HSM1AF15/EN11-HSM1AF15/KiCad)(options "")(descr ""))
+  (lib (name sj1)(type KiCad)(uri /Users/jeremy/Downloads/LIB_SJ1-2503A/SJ1-2503A/KiCad)(options "")(descr ""))
+  (lib (name mj1)(type KiCad)(uri /Users/jeremy/Downloads/LIB_MJ1-2503A/MJ1-2503A/KiCad)(options "")(descr ""))
+  (lib (name more_different_sj1)(type KiCad)(uri /Users/jeremy/Downloads/SJ1-2503A)(options "")(descr ""))
+  (lib (name sparkfun-batteries)(type KiCad)(uri /Users/jeremy/Documents/KiCad-parts/SparkFun-KiCad-Libraries/Footprints/Batteries.pretty)(options "")(descr ""))
+)
