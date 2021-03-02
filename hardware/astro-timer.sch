@@ -478,7 +478,7 @@ U 1 1 603EB8A6
 P 3150 1600
 F 0 "BT1" H 3268 1696 50  0000 L CNN
 F 1 "Battery_Cell" H 3268 1605 50  0000 L CNN
-F 2 "Battery:BatteryHolder_Keystone_2460_1xAA" V 3150 1660 50  0001 C CNN
+F 2 "sparkfun-batteries:BATTERY-AAA" V 3150 1660 50  0001 C CNN
 F 3 "~" V 3150 1660 50  0001 C CNN
 	1    3150 1600
 	1    0    0    -1  
@@ -489,7 +489,7 @@ U 1 1 603EBBDC
 P 3150 1900
 F 0 "BT2" H 3268 1996 50  0000 L CNN
 F 1 "Battery_Cell" H 3268 1905 50  0000 L CNN
-F 2 "Battery:BatteryHolder_Keystone_2460_1xAA" V 3150 1960 50  0001 C CNN
+F 2 "sparkfun-batteries:BATTERY-AAA" V 3150 1960 50  0001 C CNN
 F 3 "~" V 3150 1960 50  0001 C CNN
 	1    3150 1900
 	1    0    0    -1  
