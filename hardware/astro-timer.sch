@@ -131,17 +131,6 @@ Wire Wire Line
 Wire Wire Line
 	3900 4800 3900 5350
 $Comp
-L Device:Crystal Y1
-U 1 1 603212E8
-P 6550 2850
-F 0 "Y1" H 6550 3118 50  0000 C CNN
-F 1 "Crystal" H 6550 3027 50  0000 C CNN
-F 2 "Crystal:Crystal_Round_D2.0mm_Vertical" H 6550 2850 50  0001 C CNN
-F 3 "~" H 6550 2850 50  0001 C CNN
-	1    6550 2850
-	1    0    0    -1  
-$EndComp
-$Comp
 L Connector:AVR-ISP-6 J2
 U 1 1 603246A1
 P 7900 4700
@@ -238,7 +227,7 @@ U 1 1 605272F0
 P 7600 2200
 F 0 "C1" H 7715 2246 50  0000 L CNN
 F 1 "C" H 7715 2155 50  0000 L CNN
-F 2 "Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm" H 7638 2050 50  0001 C CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 7638 2050 50  0001 C CNN
 F 3 "~" H 7600 2200 50  0001 C CNN
 	1    7600 2200
 	1    0    0    -1  
@@ -391,28 +380,6 @@ Wire Wire Line
 	6900 2550 6900 4800
 Wire Wire Line
 	6800 2550 6800 4900
-Wire Wire Line
-	6500 2550 6500 2600
-Wire Wire Line
-	6500 2600 6400 2600
-Wire Wire Line
-	6600 2550 6600 2650
-Wire Wire Line
-	6600 2650 6700 2650
-Wire Wire Line
-	6400 2600 6400 2850
-Wire Wire Line
-	6700 2650 6700 2850
-Wire Wire Line
-	6700 2950 6750 2950
-Wire Wire Line
-	6750 2950 6750 2600
-Wire Wire Line
-	6750 2600 6700 2600
-Wire Wire Line
-	6700 2600 6700 2550
-Wire Wire Line
-	6700 2950 6700 4700
 Wire Wire Line
 	4050 3650 4050 3250
 $Comp
@@ -647,6 +614,79 @@ F 1 "Rotary_Encoder_Switch" H 8850 3076 50  0000 C CNN
 F 2 "en11:EN11HSM1AF15" H 8700 2960 50  0001 C CNN
 F 3 "~" H 8850 3060 50  0001 C CNN
 	1    8850 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Crystal Y1
+U 1 1 603212E8
+P 6450 3600
+F 0 "Y1" H 6450 3868 50  0000 C CNN
+F 1 "Crystal" H 6450 3777 50  0000 C CNN
+F 2 "Crystal:Crystal_Round_D2.0mm_Vertical" H 6450 3600 50  0001 C CNN
+F 3 "~" H 6450 3600 50  0001 C CNN
+	1    6450 3600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6500 2550 6500 2850
+Wire Wire Line
+	6700 2550 6700 4700
+Wire Wire Line
+	6500 2850 6250 2850
+Wire Wire Line
+	6250 2850 6250 3600
+Wire Wire Line
+	6600 2550 6600 3600
+Wire Wire Line
+	6300 3600 6250 3600
+Wire Wire Line
+	6250 3600 6250 3700
+Connection ~ 6250 3600
+Wire Wire Line
+	6600 3600 6600 3700
+Connection ~ 6600 3600
+$Comp
+L Device:C C2
+U 1 1 6041BDCC
+P 6250 3850
+F 0 "C2" H 6365 3896 50  0000 L CNN
+F 1 "C" H 6365 3805 50  0000 L CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm" H 6288 3700 50  0001 C CNN
+F 3 "~" H 6250 3850 50  0001 C CNN
+	1    6250 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C3
+U 1 1 6041C3F5
+P 6600 3850
+F 0 "C3" H 6715 3896 50  0000 L CNN
+F 1 "C" H 6715 3805 50  0000 L CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm" H 6638 3700 50  0001 C CNN
+F 3 "~" H 6600 3850 50  0001 C CNN
+	1    6600 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0101
+U 1 1 6041CA29
+P 6250 4000
+F 0 "#PWR0101" H 6250 3750 50  0001 C CNN
+F 1 "GND" V 6255 3872 50  0000 R CNN
+F 2 "" H 6250 4000 50  0001 C CNN
+F 3 "" H 6250 4000 50  0001 C CNN
+	1    6250 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 6041D3F2
+P 6600 4000
+F 0 "#PWR0102" H 6600 3750 50  0001 C CNN
+F 1 "GND" V 6605 3872 50  0000 R CNN
+F 2 "" H 6600 4000 50  0001 C CNN
+F 3 "" H 6600 4000 50  0001 C CNN
+	1    6600 4000
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC
