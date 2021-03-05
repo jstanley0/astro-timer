@@ -5,35 +5,40 @@
 
 void input_init()
 {
-    OCR1A = 5000;
+    OCR1A = 50000; // 50ms at 1MHz
     TCCR1B = (1 << WGM12) | (1 << CS10);    // start timer w/o prescaler, in CTC mode
-    TIMSK1 = (1 << OCIE1A);    // enable overflow interrupt
+    TIMSK1 = (1 << OCIE1A);    // enable compare match A interrupt
+
+    // enable pin-change interrupt on encoder clock
+    PCMSK1 = (1 << PCINT8);
+    PCICR = (1 << PCIE1);
+
 }
 
 volatile uint8_t input_ready = 0;
 volatile int8_t encoder_ticks = 0;
 
-// triggers every 5ms. we will poll the encoder that frequently, but check the buttons
-// (and allow the main program's state machine to re-evaluate) every 50ms
+// triggers every 50ms
 ISR(TIMER1_COMPA_vect)
 {
-    static uint8_t cycles = 0;
-    static uint8_t last_encoder_clock = 1;
+    input_ready = 1;
+}
 
-    uint8_t encoder_clock = ENCODER_CLOCK();
-    if (encoder_clock && !last_encoder_clock) {
-        encoder_ticks += (ENCODER_DATA() ? -1 : 1);
+// triggers when the encoder is moved
+// TODO debounce, somehow
+ISR(PCINT1_vect)
+{
+    static uint8_t prev_clock = 1;
+    uint8_t clock = (PINC & 1);
+    // detect rising edge
+    if (clock && !prev_clock) {
+        encoder_ticks += (PINC & 2) ? -1 : 1;
     }
-    last_encoder_clock = encoder_clock;
-
-    if (++cycles == 10) {
-        input_ready = 1;
-        cycles = 0;
-    }
+    prev_clock = clock;
 }
 
 
-// here's how button presses work:zz
+// here's how button presses work:
 // - a press is registered when a button is released.
 // - a hold is registered when the same button has been down
 //   for a specified number of cycles.  the button release

@@ -16,7 +16,7 @@
 
 static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff, uint8_t max)
 {
-    if (buttons == 0)
+    if (buttons == 0 && encoder_diff == 0)
         return 0;
 
     CLOCK_BLINK_RESET();

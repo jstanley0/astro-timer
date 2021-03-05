@@ -13,11 +13,12 @@ void io_init()
     PORTD = 0b11111111;
 }
 
+// flash the apostrophe. useful for "is this code being reached?"
 void blip()
 {
     cli();
     DIGITS_OFF();
-    DIGIT_VALUE(0);
+    DIGIT_VALUE(~1);
     DIGIT_ON(4);
     _delay_ms(1);
     sei();

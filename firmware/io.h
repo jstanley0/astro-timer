@@ -29,8 +29,7 @@ void io_init();
 
 #define BUTTON_STATE() ((PINC & 0b111100) >> 2)
 
-#define ENCODER_CLOCK() (PINC & 0b00000001)
-#define ENCODER_DATA()  (PINC & 0b00000010)
+// note: in contravention of my comment above, input.c uses an explicit pin-change interrupt vector :P
 
 // one-bit printf debugging...
 void blip();
