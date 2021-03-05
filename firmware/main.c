@@ -1,102 +1,25 @@
-// Exposure timer MkII
-// based on AVR ATMEGA48 running at 1MHz (default fuses okay)
+// Astrophotography Exposure Timer Mk IV
+// based on AVR ATMEGAx8 running at 1MHz (default fuses okay)
 // build with avr-gcc
 //
 // Source code (c) 2007-2021 by Jeremy Stanley
 // https://github.com/jstanley0/astro-timer
 // Licensed under GNU GPL v2 or later
 
-#include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
-#include <avr/sleep.h>
 
-// Put the processor in idle mode for the specified number of "kiloclocks"
-// (= periods of 1024 clock cycles)
+#include "io.h"
+#include "input.h"
+#include "clock.h"
+#include "display.h"
+#include "settings.h"
 
-volatile uint8_t wakeup;
-ISR(TIMER1_COMPA_vect)
-{
-    wakeup = 1;
-}
-
-void Sleep(uint16_t kiloclocks)
-{
-    TCCR1A = 0;
-    TCCR1B = 0;                // stop the timer
-    TIFR1 = (1 << OCF1A);    // clear output-compare A flag
-    OCR1A = kiloclocks;        // set compare match A target
-    TCNT1 = 0;                // reset timer counter
-    TIMSK1 = (1 << OCIE1A);    // enable compare match A interrupt
-    TCCR1B = (1 << CS12) | (1 << CS10);    // start timer with 1/1024 prescaler
-
-    // sleep until it's time to wake up
-    // use a loop here because other interrupts will happen
-    wakeup = 0;
-    set_sleep_mode(SLEEP_MODE_IDLE);
-    do {
-        sleep_mode();
-    } while( !wakeup );
-
-    TIMSK1 = 0;                // stop the interrupt
-    TCCR1B = 0;                // stop the timer
-}
-
-void state_delay() {
-
-}
-
-
-
-
-void IntToDigs2(int n, uint8_t digs[4])
-{
-    digs[0] = 0;
-    while(n >= 10)
-    {
-        n -= 10;
-        ++digs[0];
-    }
-
-    digs[1] = 0;
-    while(n >= 1)
-    {
-        n -= 1;
-        ++digs[1];
-    }
-}
-
-/*
-void IntToDigs4(int n, uint8_t digs[4])
-{
-    digs[0] = 0;
-    while(n >= 1000)
-    {
-        n -= 1000;
-        ++digs[0];
-    }
-
-    digs[1] = 0;
-    while(n >= 100)
-    {
-        n -= 100;
-        ++digs[1];
-    }
-
-    IntToDigs2(n, &digs[2]);
-}
-*/
-
-
-
-
-static unsigned char EditNum(uint8_t *num, uint8_t buttons, uint8_t max)
+static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff, uint8_t max)
 {
     if (buttons == 0)
         return 0;
 
-    display_blink_reset();
+    CLOCK_BLINK_RESET();
 
     if (buttons & BUTTON_SELECT) {
         if (buttons & BUTTON_HOLD)
@@ -107,10 +30,20 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, uint8_t max)
     if (buttons & BUTTON_START) {
         (*num)++;
     }
-    if (*num >= max)
-        *num = 0;
+    if (encoder_diff != 0) {
+        // spinning the encoder: stop at the low and high limits
+        *num += encoder_diff;
+        if (*num > 200)
+            *num = 0;   // underflow, probably
+        else if (*num >= max)
+            *num = max - 1;
+    } else {
+        // old button-setting: wrap after max
+        if (*num >= max)
+            *num = 0;
+    }
 
-    return (buttons & BUTTON_SET);
+    return (buttons & (BUTTON_SET | BUTTON_ENC));
 }
 
 enum State {
@@ -127,7 +60,6 @@ enum State {
     ST_MLU_PRIME, ST_MLU_WAIT,
     ST_RUN_AUTO, ST_WAIT
 };
-
 
 void InitRun(enum State *state)
 {
@@ -154,13 +86,13 @@ void InitRun(enum State *state)
 
 int main(void)
 {
-    init_io();
+    io_init();
 
     // Load saved state, if any
     Load();
 
     display_init();
-    rtc_init();
+    clock_init();
     input_init();
 
     // init the state machine
@@ -175,10 +107,11 @@ int main(void)
     // Do some stuff
     for(;;)
     {
-        // note that this puts the processor to sleep for up to 50ms
-        uint8_t buttons = input_poll();
+        uint8_t buttons;
+        int8_t encoder_diff;
+        input_poll(&buttons, &encoder_diff);
 
-        if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
+        if ((buttons & (BUTTON_START | BUTTON_ENC)) && (state < ST_BRIGHT)) {
             prevstate = state;
             remaining = count;
             cmode = 0;
@@ -243,10 +176,12 @@ int main(void)
             DisplayAlnum(LETTER_B, 4 - bright, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_TIME;
+            } else if (encoder_diff != 0) {
+                bright = (bright - encoder_diff) & 3;
             } else if (buttons & BUTTON_SET) {
                 bright = (bright - 1) & 3;
                 display_set_brightness(bright);
-            } else if (buttons & BUTTON_START) {
+            } else if (buttons & (BUTTON_START | BUTTON_ENC)) {
                 Save();
                 state = ST_SAVED;
                 remaining = 15;
@@ -265,7 +200,7 @@ int main(void)
             DisplayNum(stime[0], HIGH_POS, 0x40, 0, 0);
             display[EXTRA_POS] = COLON;
             DisplayNum(stime[1], LOW_POS, 0, 0, 0);
-            if (EditNum(&stime[0], buttons, 100)) {
+            if (EditNum(&stime[0], buttons, encoder_diff, 100)) {
                 state = ST_TIME_SET_SECS;
             }
             break;
@@ -273,7 +208,7 @@ int main(void)
             DisplayNum(stime[0], HIGH_POS, 0, 0, 0);
             display[EXTRA_POS] = COLON;
             DisplayNum(stime[1], LOW_POS, 0x40, 0, 0);
-            if (EditNum(&stime[1], buttons, 60)) {
+            if (EditNum(&stime[1], buttons, encoder_diff, 60)) {
                 state = ST_TIME;
             }
             break;
@@ -281,7 +216,7 @@ int main(void)
             DisplayNum(delay[0], HIGH_POS, 0x40, 0, 1);
             display[EXTRA_POS] = EMPTY;
             DisplayNum(delay[1], LOW_POS, 0, 0, 0);
-            if (EditNum(&delay[0], buttons, 100)) {
+            if (EditNum(&delay[0], buttons, encoder_diff, 100)) {
                 state = ST_DELAY_SET_SECS;
             }
             break;
@@ -289,19 +224,19 @@ int main(void)
             DisplayNum(delay[0], HIGH_POS, 0, 0, 1);
             display[EXTRA_POS] = EMPTY;
             DisplayNum(delay[1], LOW_POS, 0x40, 0, 0);
-            if (EditNum(&delay[1], buttons, 60)) {
+            if (EditNum(&delay[1], buttons, encoder_diff, 60)) {
                 state = ST_DELAY;
             }
             break;
         case ST_COUNT_SET:
             DisplayAlnum(LETTER_C, count, 0x40, 0);
-            if (EditNum(&count, buttons, 100)) {
+            if (EditNum(&count, buttons, encoder_diff, 100)) {
                 state = ST_COUNT;
             }
             break;
         case ST_MLU_SET:
             DisplayAlnum(LETTER_L, mlu, 0x40, 0);
-            if (EditNum(&mlu, buttons, 60)) {
+            if (EditNum(&mlu, buttons, encoder_diff, 60)) {
                 state = ST_MLU;
             }
             break;
@@ -348,7 +283,7 @@ int main(void)
                 // remaining exposures
                 DisplayAlnum(LETTER_C, remaining, 0, 1);
             }
-            display[EXTRA_POS] = (TCNT2 & 0x80) ? EMPTY : COLON;
+            display[EXTRA_POS] = CLOCK_BLINKING() ? EMPTY : COLON;
             break;
         case ST_MLU_PRIME:
             SHUTTER_OFF();
@@ -371,11 +306,11 @@ int main(void)
         case ST_WAIT:
             if (cmode == 0) {
                 // wait time
-                DisplayNum(gMin, HIGH_POS, 0, 3, (TCNT2 & 0x80) ? 0 : 1);
+                DisplayNum(gMin, HIGH_POS, 0, 3, CLOCK_BLINKING() ? 0 : 1);
                 DisplayNum(gSec, LOW_POS, 0, 0, 0);
             } else {
                 // remaining exposures
-                DisplayAlnum(LETTER_C, remaining, 0, (TCNT2 & 0x80) ? 0 : 4);
+                DisplayAlnum(LETTER_C, remaining, 0, CLOCK_BLINKING() ? 0 : 4);
             }
             display[EXTRA_POS] = EMPTY;
             if (gDirection == 0)
@@ -391,7 +326,7 @@ int main(void)
 
         if (state >= ST_RUN_PRIME) {
             // check keys
-            if (buttons & BUTTON_START) {
+            if (buttons & (BUTTON_START | BUTTON_ENC)) {
                 // canceled.
                 clock_stop();
                 SHUTTER_OFF();

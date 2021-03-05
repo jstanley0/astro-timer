@@ -1,7 +1,14 @@
-//#define TEST_DISPLAY
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/pgmspace.h>
+
 #ifdef TEST_DISPLAY
 #include <util/delay.h>
 #endif
+
+#include "io.h"
+#include "display.h"
+#include "settings.h"
 
 // 0 = on since we're using a common anode display
 const uint8_t digits[10] PROGMEM = {
@@ -16,18 +23,10 @@ const uint8_t digits[10] PROGMEM = {
     0b00000001, // 8
     0b00011001, // 9
 };
-#define DECIMAL_POINT 1
-#define LETTER_C 0b01100011
-#define LETTER_L 0b11100011
-#define LETTER_B 0b11000001
-#define LETTER_S 0b01001001
-#define LETTER_A 0b00010001
-#define LETTER_V 0b10000011
-#define LETTER_E 0b01100001
 
-static const uint8_t brighttable[4] PROGMEM = { 255, 85, 28, 9 };
+const uint8_t brighttable[4] PROGMEM = { 255, 85, 28, 9 };
 
-void init_display()
+void display_init()
 {
 #ifdef TEST_DISPLAY
     for(uint8_t digit = 1; digit != 0b100000; digit <<= 1) {
@@ -80,9 +79,47 @@ ISR(TIMER0_COMPA_vect)
     DIGITS_OFF();
 }
 
+void IntToDigs2(int n, uint8_t digs[4])
+{
+    digs[0] = 0;
+    while(n >= 10)
+    {
+        n -= 10;
+        ++digs[0];
+    }
 
+    digs[1] = 0;
+    while(n >= 1)
+    {
+        n -= 1;
+        ++digs[1];
+    }
+}
 
-static void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp)
+/*
+void IntToDigs4(int n, uint8_t digs[4])
+{
+    digs[0] = 0;
+    while(n >= 1000)
+    {
+        n -= 1000;
+        ++digs[0];
+    }
+
+    digs[1] = 0;
+    while(n >= 100)
+    {
+        n -= 100;
+        ++digs[1];
+    }
+
+    IntToDigs2(n, &digs[2]);
+}
+*/
+
+#define DECIMAL_POINT 1
+
+void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp)
 {
     display[0] = letter ^ ((dp & 8) ? DECIMAL_POINT : 0);
     display[1] = EMPTY ^ ((dp & 4) ? DECIMAL_POINT : 0);
@@ -90,19 +127,7 @@ static void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t d
     DisplayNum(num, LOW_POS, blink_mask, (blink_mask == 0) ? 1 : 0, dp);
 }
 
-
-
-#define HIGH_POS 0
-#define LOW_POS  2
-#define EMPTY '\xFF'
-#define EXTRA_POS 4
-#define COLON 0b01111111
-#define APOS 0b11111110
-
-// strip - bit 0 = don't display tens place if num < 10
-//         bit 1 = ...           ones place if num == 0
-// dp = bit 0 = low digit decimal point on; bit 1 = high digit decimal point on
-static void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uint8_t dp)
+void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uint8_t dp)
 {
     uint8_t digs[2];
 
@@ -123,9 +148,4 @@ static void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t str
 void display_set_brightness(uint8_t bright)
 {
     OCR0A = pgm_read_byte(&brighttable[bright]);
-}
-
-void display_blink_reset()
-{
-    TCNT2 = 0;
 }

@@ -1,5 +1,6 @@
+#include <avr/eeprom.h>
+#include "settings.h"
 
-// params
 uint8_t stime[2] = { 0, 0 };
 uint8_t delay[2] = { 0, 0 };
 uint8_t count    = 1;

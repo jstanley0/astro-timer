@@ -1,10 +1,17 @@
 #pragma once
 
+#include <avr/io.h>
+
+void io_init();
+
 // Port assignments:
 // PORTB0..3 (output) = Digit anode drivers
 // PORTB4    (output) = colon / apostrophe anodes
 // PORTB5    (output) = Optoisolator to camera
 // PORTB6..7          = 32.768kHz watch crystal
+// PORTC0    (input)  = Encoder clock
+// PORTC1    (input)  = Encoder data
+// PORTC2    (input)  = Encoder key
 // PORTC3    (input)  = Select key
 // PORTC4    (input)  = Set key
 // PORTC5    (input)  = Start key
@@ -20,6 +27,10 @@
 
 #define DIGIT_VALUE(x) PORTD = x
 
-#define BUTTON_STATE() ((PINC & 0b111000) >> 3)
+#define BUTTON_STATE() ((PINC & 0b111100) >> 2)
 
-void init_io();
+#define ENCODER_CLOCK() (PINC & 0b00000001)
+#define ENCODER_DATA()  (PINC & 0b00000010)
+
+// one-bit printf debugging...
+void blip();

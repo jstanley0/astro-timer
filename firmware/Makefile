@@ -1,7 +1,7 @@
 DEVICE     = atmega168
 CLOCK      = 1000000
 PROGRAMMER = -c usbtiny
-OBJECTS    = main.o
+OBJECTS    = main.o clock.o display.o input.o io.o settings.o
 FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xDF:m -U efuse:w:0xF9:m
 
 

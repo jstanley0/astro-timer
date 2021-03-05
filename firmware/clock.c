@@ -1,5 +1,10 @@
+#include <avr/interrupt.h>
+#include "clock.h"
 
-void init_rtc()
+volatile int8_t gMin, gSec;
+volatile int8_t gDirection = -1;
+
+void clock_init()
 {
     // Setup the RTC...
     gMin = 0;
@@ -19,21 +24,18 @@ void init_rtc()
     TIFR2 = 0xFF;
 }
 
-static void clock_start() {
+void clock_start() {
     TCNT2 = 0;
     TIFR2 = (1 << TOV2);
     TIMSK2 |= (1 << TOIE2);
 }
 
-static void clock_stop() {
+void clock_stop() {
     TIMSK2 &= (uint8_t)~(1 << TOIE2);
 }
 
 // Timer interrupt service routine
 // Executes once per second, driven by the 32.768khz xtal
-
-volatile int8_t gMin, gSec;
-volatile int8_t gDirection = -1;
 
 ISR(TIMER2_OVF_vect)
 {
