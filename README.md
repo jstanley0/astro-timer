@@ -25,23 +25,24 @@ Parts:
  - One 32.768kHz watch crystal (TODO: see if capacitors help timing accuracy)
  - And some sort of jack compatible with your camera's remote shutter release port
 
-A future revision anticipates using a rotary encoder to make adjusting exposure
-time and count super quick, just like using your camera.
+You can optionally use a rotary encoder to make adjusting exposure
+time and count super quick, just like using your camera. The encoder makes
+the Set button unnecessary unless you want to set an arbitrary MM:SS exposure
+time rather than use a fixed stop (and the encoder still helps you set these
+values quickly).
 
 The wiring is as follows (see KiCad schematic in hardware/)
  - PORTB0..3 (output) = Digit anode drivers
  - PORTB4    (output) = colon / apostrophe anodes
  - PORTB5    (output) = Optoisolator to camera
  - PORTB6..7          = 32.768kHz watch crystal
- - PORTC3    (input)  = Select key
- - PORTC4    (input)  = Set key
- - PORTC5    (input)  = Start key
- - PORTD0..7 (output) = Segment cathodes (PD7 = A, PD6 = B, ... PD0 = DP)
-
-Future enhancement (anticipated in the PCB in hardware/)
  - PORTC0    (input)  = Rotary encoder CLK
  - PORTC1    (input)  = Rotary encoder DT
  - PORTC2    (input)  = Rotary encoder SW
+ - PORTC3    (input)  = Set key
+ - PORTC4    (input)  = Select key
+ - PORTC5    (input)  = Start key
+ - PORTD0..7 (output) = Segment cathodes (PD7 = A, PD6 = B, ... PD0 = DP)
 
 Compile with AVRGCC.
 
