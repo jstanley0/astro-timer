@@ -9,8 +9,8 @@
 void input_init()
 {
     OCR1A = 50000; // 50ms at 1MHz
-    TCCR1B = (1 << WGM12) | (1 << CS10);     // start timer w/o prescaler, in CTC mode
-    TIMSK1 = (1 << OCIE1A) | (1 << OCIE1B);  // enable compare match A and B interrupts
+    TCCR1B = (1 << WGM12) | (1 << CS10); // start timer w/o prescaler, in CTC mode
+    TIMSK1 = (1 << OCIE1A);              // enable compare match A interrupt
 
     // enable pin-change interrupt on encoder clock
     PCMSK1 = (1 << PCINT8);
@@ -18,8 +18,8 @@ void input_init()
 }
 
 volatile uint8_t input_ready = 0;
+volatile uint8_t prev_clock = 1;
 volatile int8_t encoder_ticks = 0;
-volatile uint8_t bouncing = 0;
 
 // triggers every 50ms, used to sample tac buttons and drive the state machine
 ISR(TIMER1_COMPA_vect)
@@ -30,22 +30,26 @@ ISR(TIMER1_COMPA_vect)
 // end the blackout period for the encoder interrupt
 ISR(TIMER1_COMPB_vect)
 {
-    bouncing = 0;
+    PCICR |= (1 << PCIE1);
+    TIMSK1 &= ~(1 << OCIE1B);
+    prev_clock = (PINC & 1);
 }
 
 // triggers when the encoder is moved
 ISR(PCINT1_vect)
 {
-    static uint8_t prev_clock = 1;
     uint8_t clock = (PINC & 1);
     // detect rising edge
-    if (clock && !prev_clock && !bouncing) {
+    if (clock && !prev_clock) {
         encoder_ticks += (PINC & 2) ? -1 : 1;
-        bouncing = 1;
+
+        // debounce: turn off the pin-change interrupt for awhile
         uint16_t blackout_end = TCNT1 + BOUNCE_CYCLES;
         if (blackout_end >= 50000)
             blackout_end -= 50000;
         OCR1B = blackout_end;
+        PCICR &= ~(1 << PCIE1);
+        TIMSK1 |= (1 << OCIE1B);
     }
     prev_clock = clock;
 }

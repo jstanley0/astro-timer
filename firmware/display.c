@@ -57,7 +57,6 @@ void display_init()
 // By drawing each in turn quickly enough, we give the illusion of
 // a solid display, but without requiring the output ports and wiring
 // to drive each digit independently.
-
 volatile uint8_t display[5] = { '\xff', '\xff', '\xff', '\xff', '\xff' };
 ISR(TIMER0_OVF_vect)
 {
@@ -73,7 +72,6 @@ ISR(TIMER0_OVF_vect)
 // prevent ghosting caused by the wrong value being briefly displayed.
 // By changing the value of OCR0A, we can control the effective
 // brightness of the display.
-
 ISR(TIMER0_COMPA_vect)
 {
     DIGITS_OFF();
