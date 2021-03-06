@@ -49,6 +49,9 @@ void display_init()
     // In lower brightness modes, we'll make it happen sooner.
     OCR0A = pgm_read_byte(&brighttable[bright]);
 
+    // backup blanking interrupt: prevent visual glitches at lowest brightness setting
+    OCR0B = 28;
+
     // Enable overflow and compare match interrupts
     TIMSK0 = (1<<TOIE0) | (1<<OCIE0A);
 }
@@ -73,6 +76,12 @@ ISR(TIMER0_OVF_vect)
 // By changing the value of OCR0A, we can control the effective
 // brightness of the display.
 ISR(TIMER0_COMPA_vect)
+{
+    DIGITS_OFF();
+}
+
+// backup blanking interrupt :P
+ISR(TIMER0_COMPB_vect)
 {
     DIGITS_OFF();
 }
@@ -146,4 +155,6 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
 void display_set_brightness(uint8_t bright)
 {
     OCR0A = pgm_read_byte(&brighttable[bright]);
+    if ((bright == 3) != !!(TIMSK0 & (1 << OCIE0B)))
+        TIMSK0 ^= (1<<OCIE0B);
 }
