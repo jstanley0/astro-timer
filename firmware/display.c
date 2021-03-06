@@ -44,24 +44,30 @@ void display_init()
     TCCR0A = 0;
     TCCR0B = (1<<CS01);
 
+    // Output compare value A - refreshes a digit.
+    // Note we use a compare-match instead of overflow here because this needs to be
+    // a higher priority interrupt than the blanking one; otherwise, if the CPU is busy
+    // and both interrupt flags are set before either vector is executed, they'll run
+    // in the wrong order, resulting in visual glitches such as very bright sparkling digits
+    // in the lowest brightness mode.
+    OCR0A = 0;
+
     // Output compare value B - controls blanking.
     // In full brightness mode, we'll make this happen immediately before the refresh,
     // In lower brightness modes, we'll make it happen sooner.
-    OCR0A = pgm_read_byte(&brighttable[bright]);
+    OCR0B = pgm_read_byte(&brighttable[bright]);
 
-    // backup blanking interrupt: prevent visual glitches at lowest brightness setting
-    OCR0B = 28;
-
-    // Enable overflow and compare match interrupts
-    TIMSK0 = (1<<TOIE0) | (1<<OCIE0A);
+    // Enable compare match A and B interrupts
+    TIMSK0 = (1<<OCIE0A) | (1<<OCIE0B);
 }
+
+volatile uint8_t display[5] = { '\xff', '\xff', '\xff', '\xff', '\xff' };
 
 // Refresh interrupt - refreshes the next digit on the display.
 // By drawing each in turn quickly enough, we give the illusion of
 // a solid display, but without requiring the output ports and wiring
 // to drive each digit independently.
-volatile uint8_t display[5] = { '\xff', '\xff', '\xff', '\xff', '\xff' };
-ISR(TIMER0_OVF_vect)
+ISR(TIMER0_COMPA_vect)
 {
     static uint8_t didx = 0;
     DIGIT_VALUE(display[didx]);
@@ -73,14 +79,8 @@ ISR(TIMER0_OVF_vect)
 // Blanking interrupt - clears the display prior to the next refresh.
 // We need to turn the digits off before switching segments to
 // prevent ghosting caused by the wrong value being briefly displayed.
-// By changing the value of OCR0A, we can control the effective
+// By changing the value of OCR0B, we can control the effective
 // brightness of the display.
-ISR(TIMER0_COMPA_vect)
-{
-    DIGITS_OFF();
-}
-
-// backup blanking interrupt :P
 ISR(TIMER0_COMPB_vect)
 {
     DIGITS_OFF();
@@ -154,7 +154,5 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
 
 void display_set_brightness(uint8_t bright)
 {
-    OCR0A = pgm_read_byte(&brighttable[bright]);
-    if ((bright == 3) != !!(TIMSK0 & (1 << OCIE0B)))
-        TIMSK0 ^= (1<<OCIE0B);
+    OCR0B = pgm_read_byte(&brighttable[bright]);
 }
