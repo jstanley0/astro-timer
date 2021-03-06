@@ -7,12 +7,51 @@
 // Licensed under GNU GPL v2 or later
 
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 #include "io.h"
 #include "input.h"
 #include "clock.h"
 #include "display.h"
 #include "settings.h"
+
+const uint16_t stop_table[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 8, 10, 13, 15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 90, 120, 150, 180, 210, 240, 300, 360, 480, 540, 600, 720, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3300, 3600, 4500, 5400};
+const size_t STOP_TABLE_SIZE = sizeof(stop_table) / sizeof(stop_table[0]);
+
+void adjust_stop(uint8_t min_sec[2], int8_t *current_stop, int8_t encoder_diff)
+{
+    uint16_t secs = (uint16_t)min_sec[0] * 60 + min_sec[1];
+    if (*current_stop < 0) {
+        // the value was manually edited and we're possibly between stops, so find the one to start from
+        uint8_t i = 0;
+        // find the first stop that's greater than the current time
+        while(i < STOP_TABLE_SIZE && pgm_read_word(&stop_table[i]) <= secs)
+            ++i;
+        // if we're going up, the stop we found is where we want to increment to with our first tick
+        if (encoder_diff > 0)
+            --i;
+        *current_stop = i;
+    }
+    *current_stop += encoder_diff;
+    if (*current_stop < 0)
+        *current_stop = 0;
+    else if (*current_stop >= STOP_TABLE_SIZE)
+        *current_stop = STOP_TABLE_SIZE - 1;
+    uint16_t new_time = pgm_read_word(&stop_table[*current_stop]);
+    min_sec[0] = new_time / 60;
+    min_sec[1] = new_time % 60;
+}
+
+void increment_num(uint8_t *num, int8_t encoder_diff, uint8_t max)
+{
+    // spinning the encoder will stop at the low limit (0) and high limit (max)
+    // (where max is 59 or 99)
+    *num += encoder_diff;
+    if (*num > 200)
+        *num = 0;   // underflow, probably
+    else if (*num > max)
+        *num = max;
+}
 
 static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff, uint8_t max)
 {
@@ -31,19 +70,20 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
         (*num)++;
     }
     if (encoder_diff != 0) {
-        // spinning the encoder: stop at the low and high limits
-        *num += encoder_diff;
-        if (*num > 200)
-            *num = 0;   // underflow, probably
-        else if (*num >= max)
-            *num = max - 1;
+        increment_num(num, encoder_diff, max);
     } else {
-        // old button-setting: wrap after max
-        if (*num >= max)
+        if (*num > max)
             *num = 0;
     }
 
     return (buttons & (BUTTON_SET | BUTTON_ENC));
+}
+
+void adjust_brightness(int8_t encoder_diff)
+{
+    uint8_t diff = encoder_diff ? encoder_diff : 1;
+    bright = (bright - diff) & 3;
+    display_set_brightness(bright);
 }
 
 enum State {
@@ -100,6 +140,8 @@ int main(void)
     enum State prevstate = ST_TIME;
     uint8_t remaining = 0;
     uint8_t cmode = 0;
+    int8_t stime_stop = -1;
+    int8_t delay_stop = -1;
 
     // Enable interrupts
     sei();
@@ -130,6 +172,8 @@ int main(void)
                 state = ST_DELAY;
             } else if (buttons & BUTTON_SET) {
                 state = ST_TIME_SET_MINS;
+            } else if (encoder_diff) {
+                adjust_stop(stime, &stime_stop, encoder_diff);
             }
             break;
         case ST_DELAY:
@@ -140,6 +184,8 @@ int main(void)
                 state = ST_COUNT;
             } else if (buttons & BUTTON_SET) {
                 state = ST_DELAY_SET_MINS;
+            } else if (encoder_diff) {
+                adjust_stop(delay, &delay_stop, encoder_diff);
             }
             break;
         case ST_COUNT:
@@ -148,6 +194,8 @@ int main(void)
                 state = ST_MLU;
             } else if (buttons & BUTTON_SET) {
                 state = ST_COUNT_SET;
+            } else if (encoder_diff) {
+                increment_num(&count, encoder_diff, 99);
             }
             break;
         case ST_MLU:
@@ -156,6 +204,8 @@ int main(void)
                 state = ST_BRIGHT;
             } else if (buttons & BUTTON_SET) {
                 state = ST_MLU_SET;
+            } else if (encoder_diff) {
+                increment_num(&mlu, encoder_diff, 99);
             }
             break;
 /* I'll put this in once there's more than one option ;)
@@ -176,10 +226,8 @@ int main(void)
             DisplayAlnum(LETTER_B, 4 - bright, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_TIME;
-            } else if (encoder_diff != 0) {
-                bright = (bright - encoder_diff) & 3;
-            } else if (buttons & BUTTON_SET) {
-                bright = (bright - 1) & 3;
+            } else if ((buttons & BUTTON_SET) || encoder_diff) {
+                adjust_brightness(encoder_diff);
                 display_set_brightness(bright);
             } else if (buttons & (BUTTON_START | BUTTON_ENC)) {
                 Save();
@@ -200,7 +248,7 @@ int main(void)
             DisplayNum(stime[0], HIGH_POS, 0x40, 0, 0);
             display[EXTRA_POS] = COLON;
             DisplayNum(stime[1], LOW_POS, 0, 0, 0);
-            if (EditNum(&stime[0], buttons, encoder_diff, 100)) {
+            if (EditNum(&stime[0], buttons, encoder_diff, 99)) {
                 state = ST_TIME_SET_SECS;
             }
             break;
@@ -208,7 +256,8 @@ int main(void)
             DisplayNum(stime[0], HIGH_POS, 0, 0, 0);
             display[EXTRA_POS] = COLON;
             DisplayNum(stime[1], LOW_POS, 0x40, 0, 0);
-            if (EditNum(&stime[1], buttons, encoder_diff, 60)) {
+            if (EditNum(&stime[1], buttons, encoder_diff, 59)) {
+                stime_stop = -1;
                 state = ST_TIME;
             }
             break;
@@ -216,7 +265,7 @@ int main(void)
             DisplayNum(delay[0], HIGH_POS, 0x40, 0, 1);
             display[EXTRA_POS] = EMPTY;
             DisplayNum(delay[1], LOW_POS, 0, 0, 0);
-            if (EditNum(&delay[0], buttons, encoder_diff, 100)) {
+            if (EditNum(&delay[0], buttons, encoder_diff, 99)) {
                 state = ST_DELAY_SET_SECS;
             }
             break;
@@ -224,19 +273,20 @@ int main(void)
             DisplayNum(delay[0], HIGH_POS, 0, 0, 1);
             display[EXTRA_POS] = EMPTY;
             DisplayNum(delay[1], LOW_POS, 0x40, 0, 0);
-            if (EditNum(&delay[1], buttons, encoder_diff, 60)) {
+            if (EditNum(&delay[1], buttons, encoder_diff, 59)) {
+                delay_stop = -1;
                 state = ST_DELAY;
             }
             break;
         case ST_COUNT_SET:
             DisplayAlnum(LETTER_C, count, 0x40, 0);
-            if (EditNum(&count, buttons, encoder_diff, 100)) {
+            if (EditNum(&count, buttons, encoder_diff, 99)) {
                 state = ST_COUNT;
             }
             break;
         case ST_MLU_SET:
             DisplayAlnum(LETTER_L, mlu, 0x40, 0);
-            if (EditNum(&mlu, buttons, encoder_diff, 60)) {
+            if (EditNum(&mlu, buttons, encoder_diff, 59)) {
                 state = ST_MLU;
             }
             break;
@@ -338,13 +388,12 @@ int main(void)
                 }
 
                 state = prevstate;
-            } else if ((buttons & BUTTON_SELECT) && (count > 1)) {
+            } else if ((count > 1) && ((buttons & BUTTON_SELECT) || encoder_diff)) {
                 // toggle display, time left vs. count left
                 cmode = (cmode + 1) & 1;
             } else if (buttons & BUTTON_SET) {
                 // adjust brightness
-                bright = (bright - 1) & 3;
-                display_set_brightness(bright);
+                adjust_brightness(0);
             }
         }
      }

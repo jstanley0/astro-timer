@@ -3,36 +3,49 @@
 #include "input.h"
 #include "io.h"
 
+// blackout time in microseconds; can't exceed about 15000 without causing issues
+#define BOUNCE_CYCLES 10000
+
 void input_init()
 {
     OCR1A = 50000; // 50ms at 1MHz
-    TCCR1B = (1 << WGM12) | (1 << CS10);    // start timer w/o prescaler, in CTC mode
-    TIMSK1 = (1 << OCIE1A);    // enable compare match A interrupt
+    TCCR1B = (1 << WGM12) | (1 << CS10);     // start timer w/o prescaler, in CTC mode
+    TIMSK1 = (1 << OCIE1A) | (1 << OCIE1B);  // enable compare match A and B interrupts
 
     // enable pin-change interrupt on encoder clock
     PCMSK1 = (1 << PCINT8);
     PCICR = (1 << PCIE1);
-
 }
 
 volatile uint8_t input_ready = 0;
 volatile int8_t encoder_ticks = 0;
+volatile uint8_t bouncing = 0;
 
-// triggers every 50ms
+// triggers every 50ms, used to sample tac buttons and drive the state machine
 ISR(TIMER1_COMPA_vect)
 {
     input_ready = 1;
 }
 
+// end the blackout period for the encoder interrupt
+ISR(TIMER1_COMPB_vect)
+{
+    bouncing = 0;
+}
+
 // triggers when the encoder is moved
-// TODO debounce, somehow
 ISR(PCINT1_vect)
 {
     static uint8_t prev_clock = 1;
     uint8_t clock = (PINC & 1);
     // detect rising edge
-    if (clock && !prev_clock) {
+    if (clock && !prev_clock && !bouncing) {
         encoder_ticks += (PINC & 2) ? -1 : 1;
+        bouncing = 1;
+        uint16_t blackout_end = TCNT1 + BOUNCE_CYCLES;
+        if (blackout_end >= 50000)
+            blackout_end -= 50000;
+        OCR1B = blackout_end;
     }
     prev_clock = clock;
 }
