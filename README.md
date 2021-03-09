@@ -17,7 +17,7 @@ Parts:
  - Atmel ATMEGA168 microcontroller (a prior version used ATMEGA48 and the code 
    still fits, but my original hardware was lost and I had an ATMEGA168 on hand)
  - 4-digit 7-segment LED display (code assumes common anode; PCB uses
-   COM-09483 from SparkFun, model YSD-439AR6B-35. The Lite-ON LTC-4627JF should 
+   COM-09483 from SparkFun, model YSD-439AR6B-35. The Lite-ON LTC-4627 should 
    also be compatible).
  - Suitable resistors to drive the LEDs (I use 470 ohms)
  - 3V power supply (e.g. 2x AAA batteries)
