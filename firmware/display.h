@@ -20,8 +20,10 @@ void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp);
 #define LOW_POS  2
 #define EMPTY '\xFF'
 #define EXTRA_POS 4
-#define COLON 0b01111111
-#define APOS 0b11111110
+// this is plexed with either segment A, or both dots separately to A and B, depending on the hardware
+#define COLON 0b00111111
+// this is plexed with either segment C or DP depending on the hardware
+#define APOS 0b11011110
 
 // strip - bit 0 = don't display tens place if num < 10
 //         bit 1 = ...           ones place if num == 0

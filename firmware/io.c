@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "io.h"
+#include "display.h"
 
 void io_init()
 {
@@ -22,7 +23,7 @@ void blip()
 {
     cli();
     DIGITS_OFF();
-    DIGIT_VALUE(~1);
+    DIGIT_VALUE(APOS);
     DIGIT_ON(4);
     _delay_ms(1);
     sei();
