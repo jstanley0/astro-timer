@@ -24,7 +24,7 @@ const uint8_t digits[10] PROGMEM = {
     0b00001001, // 9
 };
 
-const uint8_t brighttable[4] PROGMEM = { 255, 85, 28, 9 };
+const uint8_t brighttable[4] PROGMEM = { 229, 77, 25, 8 };
 
 void display_init()
 {
