@@ -15,6 +15,9 @@
 #include "display.h"
 #include "settings.h"
 
+// 20 minutes (with 1200 I/O polling cycles per minute)
+#define IDLE_TIMEOUT_CYCLES 20 * 1200
+
 const uint16_t stop_table[] PROGMEM = {0, 1, 2, 3, 4, 5, 6, 8, 10, 13, 15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 90, 120, 150, 180, 210, 240, 300, 360, 480, 540, 600, 720, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3300, 3600, 4500, 5400};
 const size_t STOP_TABLE_SIZE = sizeof(stop_table) / sizeof(stop_table[0]);
 
@@ -124,17 +127,8 @@ void InitRun(enum State *state)
     clock_start();
 }
 
-int main(void)
+void run()
 {
-    io_init();
-
-    // Load saved state, if any
-    Load();
-
-    display_init();
-    clock_init();
-    input_init();
-
     // init the state machine
     enum State state = ST_TIME;
     enum State prevstate = ST_TIME;
@@ -142,16 +136,19 @@ int main(void)
     uint8_t cmode = 0;
     int8_t stime_stop = -1;
     int8_t delay_stop = -1;
+    uint16_t idle_cycles = 0;
 
-    // Enable interrupts
-    sei();
-
-    // Do some stuff
     for(;;)
     {
         uint8_t buttons;
         int8_t encoder_diff;
         input_poll(&buttons, &encoder_diff);
+
+        if (state >= ST_RUN_PRIME || buttons || encoder_diff) {
+            idle_cycles = 0;
+        } else if (++idle_cycles == IDLE_TIMEOUT_CYCLES) {
+            break;
+        }
 
         if ((buttons & (BUTTON_START | BUTTON_ENC)) && (state < ST_BRIGHT)) {
             prevstate = state;
@@ -396,6 +393,30 @@ int main(void)
                 adjust_brightness(0);
             }
         }
-     }
+    }
+}
+
+int main(void)
+{
+    io_init();
+
+    // Load saved state, if any
+    Load();
+
+    display_init();
+    clock_init();
+    input_init();
+
+    sei();
+
+    for(;;)
+    {
+        // doesn't return unless the device has been idle for a long time, ...
+        run();
+
+        // .. in which case we shut down, to save battery power.
+        // but we leave a pin change interrupt running, so a button press will wake us up
+        power_down();
+    }
 }
 
