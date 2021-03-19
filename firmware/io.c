@@ -47,7 +47,7 @@ void power_down()
 
     // save pin-change interrupt state, and enable the interrupt on all inputs
     uint8_t saved_PCMSK1 = PCMSK1;
-    PCMSK1 = 0b000111111;
+    PCMSK1 = 0b00111111;
     uint8_t saved_PCICR = PCICR;
     PCICR = (1 << PCIE1);
 
@@ -55,7 +55,16 @@ void power_down()
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     sleep_mode();
 
-    // an interrupt woke us up. restore prior state
+    // a pin-change interrupt woke us up.
+    // snooze for awhile to swallow the button release
+    // (but not _indefinitely_ in case the encoder stopped between detents or something)
+    for(uint8_t delay = 0; delay < 10; ++delay) {
+        _delay_ms(100);
+        if (0b00111111 == (PINC & 0b00111111))
+            break;
+    }
+
+    // restore prior state
     PCMSK1 = saved_PCMSK1;
     PCICR = saved_PCICR;
     TCCR0B = saved_TCCR0B;
