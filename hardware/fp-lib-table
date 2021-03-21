@@ -5,4 +5,5 @@
   (lib (name mj1)(type KiCad)(uri /Users/jeremy/Downloads/LIB_MJ1-2503A/MJ1-2503A/KiCad)(options "")(descr ""))
   (lib (name more_different_sj1)(type KiCad)(uri /Users/jeremy/Downloads/SJ1-2503A)(options "")(descr ""))
   (lib (name sparkfun-batteries)(type KiCad)(uri /Users/jeremy/Documents/KiCad-parts/SparkFun-KiCad-Libraries/Footprints/Batteries.pretty)(options "")(descr ""))
+  (lib (name more_different_en11)(type KiCad)(uri /Users/jeremy/Downloads/ul_EN11VSM1AF20/KiCAD/2021-03-21_16-05-47/footprints.pretty)(options "")(descr ""))
 )
