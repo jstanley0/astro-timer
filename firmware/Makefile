@@ -1,4 +1,4 @@
-DEVICE     = atmega168
+DEVICE     = atmega328p
 CLOCK      = 1000000
 PROGRAMMER = -c usbtiny
 OBJECTS    = main.o clock.o display.o input.o io.o settings.o

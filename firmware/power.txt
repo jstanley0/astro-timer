@@ -3,24 +3,22 @@ measured power consumption  @ 3V
 counting / idle
 
 4 digits
-b1 = 1.3mA / 0.7mA
-b2 = 1.8mA / 1.4mA
-b3 = 4.0mA / 3.5mA
-b4 = 10mA / 9.5mA
+b1 = 0.6mA / 0.5mA
+b2 = 1.1mA / 1.0mA
+b3 = 3.0mA / 2.9mA
+b4 = 8.4mA / 8.3mA
 
 2 digits
-b1 = 1.2mA / 0.6mA
-b2 = 1.5mA / 0.9mA
-b3 = 2.6mA / 2.1mA
-b4 = 6.2mA / 5.6mA
+b1 = 0.5mA / 0.4mA
+b2 = 0.8mA / 0.7mA
+b3 = 1.7mA / 1.6mA
+b4 = 4.5mA / 4.4mA
 
+Counting power consumption was reduced to 0.1mA over idle power consumption
+by trading the optoisolator for an NPN transistor with a 22k base resistor.
+I probably could have made the base resistor much larger, but this seems fine.
 
-working with a 2mA ballpark estimate, we have...
-
-Powered by 2x AA  @ 2000mAh = 40 days
-Powered by 2x AAA @ 1000mAh = 20 days
-Powered by 1x coin cell @ 500mAh = 10 days
-
-... these figures actually aren't that bad,
-considering a long night in Leamington would be
-only 1/4 of a day...
+Since the highest brightness level is retina-scorching at night (and the lowest
+is perfectly serviceable), we really are looking at less than a milliamp of
+average current draw. Meaning my pair of AAAs should _theoretically_ provide
+on the order of 1000 hours of use. I'm probably not gonna get that in a _year_.

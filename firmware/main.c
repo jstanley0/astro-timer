@@ -69,7 +69,7 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
         else
             *num += 10;
     }
-    if (buttons & BUTTON_START) {
+    if (buttons & BUTTON_SET) {
         (*num)++;
     }
     if (encoder_diff != 0) {
@@ -79,7 +79,7 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
             *num = 0;
     }
 
-    return (buttons & (BUTTON_SET | BUTTON_ENC));
+    return (buttons & BUTTON_START);
 }
 
 void adjust_brightness(int8_t encoder_diff)
@@ -150,7 +150,7 @@ void run()
             break;
         }
 
-        if ((buttons & (BUTTON_START | BUTTON_ENC)) && (state < ST_BRIGHT)) {
+        if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
             prevstate = state;
             remaining = count;
             cmode = 0;
@@ -226,7 +226,7 @@ void run()
             } else if ((buttons & BUTTON_SET) || encoder_diff) {
                 adjust_brightness(encoder_diff);
                 display_set_brightness(bright);
-            } else if (buttons & (BUTTON_START | BUTTON_ENC)) {
+            } else if (buttons & BUTTON_START) {
                 Save();
                 state = ST_SAVED;
                 remaining = 15;
@@ -373,7 +373,7 @@ void run()
 
         if (state >= ST_RUN_PRIME) {
             // check keys
-            if (buttons & (BUTTON_START | BUTTON_ENC)) {
+            if (buttons & BUTTON_START) {
                 // canceled.
                 clock_stop();
                 SHUTTER_OFF();
@@ -399,6 +399,7 @@ void run()
 int main(void)
 {
     io_init();
+    blip();
 
     // Load saved state, if any
     Load();
