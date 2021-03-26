@@ -63,15 +63,22 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
 
     CLOCK_BLINK_RESET();
 
+    // holding Set resets to 0
+    if ((buttons & (BUTTON_SET | BUTTON_HOLD)) == (BUTTON_SET | BUTTON_HOLD)) {
+        buttons ^= BUTTON_SET;  // don't save/exit in this case
+        *num = 0;
+    }
+
+    // tapping Select increments by 1 (and holding Select increments by 10)
     if (buttons & BUTTON_SELECT) {
         if (buttons & BUTTON_HOLD)
-            *num = 0;
-        else
             *num += 10;
+        else
+            *num += 1;
     }
-    if (buttons & BUTTON_SET) {
-        (*num)++;
-    }
+
+    // the encoder increments / decrements by 1, saturating
+    // (button taps wrap back to 0)
     if (encoder_diff != 0) {
         increment_num(num, encoder_diff, max);
     } else {
@@ -79,7 +86,8 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
             *num = 0;
     }
 
-    return (buttons & BUTTON_START);
+    // save with either the Set button or the Start button
+    return (buttons & (BUTTON_SET | BUTTON_START));
 }
 
 void adjust_brightness(int8_t encoder_diff)
