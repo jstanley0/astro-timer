@@ -73,7 +73,7 @@ uint8_t GetButtons()
     // if we've already registered a "hold"
     if (repeat >= REPEAT_THRESHOLD) {
         prevState = curState;
-        if (curState == 0xF)
+        if (curState == 0x7)
             repeat = 0;    // no buttons are down.
         return 0;
     }
@@ -82,10 +82,10 @@ uint8_t GetButtons()
         uint8_t pressed = ~prevState & curState;
         prevState = curState;
         return pressed;
-    } else if (curState != 0xF) {
+    } else if (curState != 0x7) {
         // button(s) are being held
         if (++repeat == REPEAT_THRESHOLD) {
-            return BUTTON_HOLD | ~(curState & 0xF);
+            return BUTTON_HOLD | ~(curState & 0x7);
         }
     }
 

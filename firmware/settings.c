@@ -33,11 +33,11 @@ void Save()
 
 void Load()
 {
-    stime[0] = loadbyte(0, 0, 99);
+    stime[0] = loadbyte(0, 3, 99);
     stime[1] = loadbyte(1, 0, 59);
     delay[0] = loadbyte(2, 0, 99);
-    delay[1] = loadbyte(3, 0, 59);
-    count    = loadbyte(4, 1, 99);
+    delay[1] = loadbyte(3, 5, 59);
+    count    = loadbyte(4, 10, 99);
     mlu      = loadbyte(5, 0, 99);
-    bright   = loadbyte(6, 1, 3);
+    bright   = loadbyte(6, 2, 3);
 }

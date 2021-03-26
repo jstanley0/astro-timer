@@ -1,5 +1,7 @@
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "clock.h"
+#include "display.h"
 
 volatile int8_t gMin, gSec;
 volatile int8_t gDirection = -1;
@@ -17,11 +19,19 @@ void clock_init()
     TCCR2A = 0;
     TCCR2B = (1<<CS22) | (1<<CS20);
 
-    // wait for TCN2UB and TCR2UB to be cleared
-    while((ASSR & 0x01) | (ASSR & 0x04));
+    clock_wait_for_xtal();
 
     // clear interrupt-flags
     TIFR2 = 0xFF;
+}
+
+void clock_wait_for_xtal()
+{
+    // wait for TCN2UB and TCR2UB to be cleared
+    while(ASSR & ((1 << TCR2AUB)|(1 << TCN2UB))) {
+        display_spin();
+        _delay_ms(100);
+    }
 }
 
 void clock_start() {

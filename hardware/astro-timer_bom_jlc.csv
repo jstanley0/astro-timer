@@ -1,0 +1,8 @@
+"Comment","Designator","Footprint","LCSC Part #"
+"100nF","C1,C2","C_0805_2012Metric","C49678"
+"10nF","C3,C4","C_0805_2012Metric","C1710"
+"Q_NPN_BEC","Q1,Q2","SOT-23","C2146"
+"470","R8,R7,R6,R5,R4,R3,R2,R1","R_0805_2012Metric","C17710"
+"22K","R9,R10","R_0603_1608Metric","C31850"
+"10K","R11,R12,R13,R14,R15","R_0603_1608Metric","C25804"
+"ATmega328P-AU","U1","TQFP-32_7x7mm_P0.8mm","C14877"

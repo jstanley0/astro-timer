@@ -32,3 +32,6 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
 
 // valid brightness levels: 0-3
 void display_set_brightness(uint8_t bright);
+
+// indeterminate progress indicator
+void display_spin();

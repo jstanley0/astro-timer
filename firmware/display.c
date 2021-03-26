@@ -156,3 +156,12 @@ void display_set_brightness(uint8_t bright)
 {
     OCR0B = pgm_read_byte(&brighttable[bright]);
 }
+
+void display_spin()
+{
+    static uint8_t bit = 0b10000000;
+    display[0] = display[1] = display[2] = display[3] = ~bit;
+    bit >>= 1;
+    if (bit == 1)
+        bit = 0b10000000;
+}
