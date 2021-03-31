@@ -26,7 +26,7 @@ Exposure Timer MkII TODO:
    -> you'd think...
 
 [ ] clean up code a bit...
- [ ] make symbolic names for all display digits
+ [x] make symbolic names for all display digits
  [ ] be consistent in '\xZZ' use (and see if it saves us anything)
 
 [ ] double-buffer the display to prevent flicker.
@@ -36,8 +36,8 @@ Exposure Timer MkII TODO:
       display in a spatially localized way, this might not matter.
 
 [ ] power save mode...
- [ ] put MCU in power save mode after idle timeout
-   [ ] wake up MCU by pushing a button. :D
+ [x] put MCU in power save mode after idle timeout
+   [x] wake up MCU by pushing a button. :D
  [ ] dim and/or turn off LEDs during long exposure?
    -> can currently do this manually...
 
