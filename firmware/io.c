@@ -27,6 +27,11 @@ void blip()
     sei();
 }
 
+void power_init()
+{
+    PRR = (1 << PRTWI) | (1 << PRSPI) | (1 << PRUSART0) | (1 << PRADC);
+}
+
 // go into as deep a sleep as we can manage, waking up on input of any kind
 void power_down()
 {

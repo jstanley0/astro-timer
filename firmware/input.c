@@ -9,7 +9,11 @@
 void input_init()
 {
     OCR1A = 50000; // 50ms at 1MHz
+#if F_CPU == 8000000
+    TCCR1B = (1 << WGM12) | (1 << CS11); // start timer at 1/8 prescaler, in CTC mode
+#else
     TCCR1B = (1 << WGM12) | (1 << CS10); // start timer w/o prescaler, in CTC mode
+#endif
     TIMSK1 = (1 << OCIE1A);              // enable compare match A interrupt
 
     // enable pin-change interrupt on encoder clock

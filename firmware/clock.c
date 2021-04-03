@@ -27,7 +27,7 @@ void clock_init()
 
 void clock_wait_for_xtal()
 {
-    // wait for TCN2UB and TCR2UB to be cleared
+    // wait for TCN2UB and TCRAUB to be cleared
     while(ASSR & ((1 << TCR2AUB)|(1 << TCN2UB))) {
         display_spin();
         _delay_ms(100);

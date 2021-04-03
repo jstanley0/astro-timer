@@ -22,3 +22,30 @@ Since the highest brightness level is retina-scorching at night (and the lowest
 is perfectly serviceable), we really are looking at less than a milliamp of
 average current draw. Meaning my pair of AAAs should _theoretically_ provide
 on the order of 1000 hours of use. I'm probably not gonna get that in a _year_.
+
+
+If we run at 8MHz--which eliminates the display glitches and allows a greater
+brightness range to be used:
+
+4 digits
+b1 = 1.2mA / 1.1mA
+b2 = 1.8mA / 1.7mA
+b3 = 3.5mA / 3.4mA
+b4 = 8.4mA / 8.2mA
+
+... so it's a bit over half a milliamp penalty.
+
+shutting some things down with the PRR:
+
+b1 = 1.0mA / 0.9mA
+b2 = 1.5mA / 1.4mA
+b3 = 3.3mA / 3.1mA
+b4 = 8.2mA / 8.0mA
+
+the PRR gave no measurable savings at 1MHz, but shaved a third of a milliamp
+off power consumption at 8MHz
+
+still, on the balance I think I prefer staying at 1MHz for now.
+
+(could we run at 2 or 4MHz? problem is there isn't a timer0 prescaler
+between 1/8 and 1/64)

@@ -412,6 +412,7 @@ int main(void)
     // Load saved state, if any
     Load();
 
+    power_init();
     display_init();
     clock_init();
     input_init();

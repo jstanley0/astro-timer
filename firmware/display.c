@@ -42,7 +42,11 @@ void display_init()
     // prescaler 1/8; at 1MHz system clock, this gives us an overflow
     // at 488 Hz, providing a per-digit refresh rate of 97.6 Hz.
     TCCR0A = 0;
+#if F_CPU == 8000000
+    TCCR0B = (1<<CS01)|(1<<CS00);   // use 1/64 prescaler at 8MHz
+#else
     TCCR0B = (1<<CS01);
+#endif
 
     // Output compare value A - refreshes a digit.
     // Note we use a compare-match instead of overflow here because this needs to be

@@ -39,5 +39,8 @@ void io_init();
 // one-bit printf debugging...
 void blip();
 
+// shut down unnecessary peripherals to save power
+void power_init();
+
 // to save power if the device is left idle too long
 void power_down();
