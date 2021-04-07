@@ -6,6 +6,12 @@
 #include "display.h"
 #include "clock.h"
 
+void sysclk_init()
+{
+    CLKPR = (1 << CLKPCE);
+    CLKPR = (1 << CLKPS1); // 1/4 prescaler, for 2MHz operation
+}
+
 void io_init()
 {
     DDRB  = 0b00111111;

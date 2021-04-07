@@ -1,10 +1,8 @@
 DEVICE     = atmega328p
-CLOCK      = 1000000
-#CLOCK      = 8000000
+CLOCK      = 2000000
 PROGRAMMER = -c usbtiny
 OBJECTS    = main.o clock.o display.o input.o io.o settings.o
 FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
-#FUSES      = -U lfuse:w:0xE2:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
 
 # Tune the lines below only if you know what you are doing:
 

@@ -24,8 +24,6 @@ const uint8_t digits[10] PROGMEM = {
     0b00001001, // 9
 };
 
-const uint8_t brighttable[4] PROGMEM = { 229, 77, 25, 8 };
-
 void display_init()
 {
 #ifdef TEST_DISPLAY
@@ -39,27 +37,24 @@ void display_init()
     }
 #endif
 
-    // prescaler 1/8; at 1MHz system clock, this gives us an overflow
-    // at 488 Hz, providing a per-digit refresh rate of 97.6 Hz.
-    TCCR0A = 0;
-#if F_CPU == 8000000
-    TCCR0B = (1<<CS01)|(1<<CS00);   // use 1/64 prescaler at 8MHz
-#else
-    TCCR0B = (1<<CS01);
-#endif
+    TCCR0A = (1<<WGM01);             // CTC mode
+    TCCR0B = (1<<CS01) | (1<<CS00);  // 1/64 prescaler
 
     // Output compare value A - refreshes a digit.
+    // At 2MHz clock, 1/64 prescaler, timer ticks happen at 31kHz, so reset the timer after 64 ticks
+    // for interrupts at 488Hz and a per-digit refresh rate of 98Hz.
+    OCR0A = 64;
+
     // Note we use a compare-match instead of overflow here because this needs to be
     // a higher priority interrupt than the blanking one; otherwise, if the CPU is busy
     // and both interrupt flags are set before either vector is executed, they'll run
     // in the wrong order, resulting in visual glitches such as very bright sparkling digits
     // in the lowest brightness mode.
-    OCR0A = 0;
 
     // Output compare value B - controls blanking.
     // In full brightness mode, we'll make this happen immediately before the refresh,
     // In lower brightness modes, we'll make it happen sooner.
-    OCR0B = pgm_read_byte(&brighttable[bright]);
+    OCR0B = 63 >> bright;
 
     // Enable compare match A and B interrupts
     TIMSK0 = (1<<OCIE0A) | (1<<OCIE0B);
@@ -80,6 +75,8 @@ ISR(TIMER0_COMPA_vect)
         didx = 0;
 }
 
+volatile uint8_t OCR0B_buf = 0;
+
 // Blanking interrupt - clears the display prior to the next refresh.
 // We need to turn the digits off before switching segments to
 // prevent ghosting caused by the wrong value being briefly displayed.
@@ -88,6 +85,12 @@ ISR(TIMER0_COMPA_vect)
 ISR(TIMER0_COMPB_vect)
 {
     DIGITS_OFF();
+
+    // buffer updates to OCR0B to prevent glitches while changing brightness
+    if (OCR0B_buf) {
+        OCR0B = OCR0B_buf;
+        OCR0B_buf = 0;
+    }
 }
 
 void IntToDigs2(int n, uint8_t digs[4])
@@ -158,7 +161,7 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
 
 void display_set_brightness(uint8_t bright)
 {
-    OCR0B = pgm_read_byte(&brighttable[bright]);
+    OCR0B_buf = 63 >> bright;
 }
 
 void display_spin()

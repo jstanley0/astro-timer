@@ -2,6 +2,8 @@
 
 #include <avr/io.h>
 
+void sysclk_init();
+
 void io_init();
 
 // Port assignments:

@@ -5,7 +5,7 @@ uint8_t stime[2] = { 0, 0 };
 uint8_t delay[2] = { 0, 0 };
 uint8_t count    = 1;
 uint8_t mlu      = 0;
-uint8_t bright   = 1;
+uint8_t bright   = 2;
 
 inline void savebyte(uint16_t addr, uint8_t value)
 {
@@ -39,5 +39,5 @@ void Load()
     delay[1] = loadbyte(3, 5, 59);
     count    = loadbyte(4, 10, 99);
     mlu      = loadbyte(5, 0, 99);
-    bright   = loadbyte(6, 2, 3);
+    bright   = loadbyte(6, 2, 5);
 }

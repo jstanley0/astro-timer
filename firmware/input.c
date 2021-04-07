@@ -3,17 +3,13 @@
 #include "input.h"
 #include "io.h"
 
-// blackout time in microseconds; can't exceed about 15000 without causing issues
-#define BOUNCE_CYCLES 10000
+// blackout time in units of 4 microseconds
+#define BOUNCE_CYCLES 2500
 
 void input_init()
 {
-    OCR1A = 50000; // 50ms at 1MHz
-#if F_CPU == 8000000
+    OCR1A = 12500;                       // 50ms cycle at 2MHz
     TCCR1B = (1 << WGM12) | (1 << CS11); // start timer at 1/8 prescaler, in CTC mode
-#else
-    TCCR1B = (1 << WGM12) | (1 << CS10); // start timer w/o prescaler, in CTC mode
-#endif
     TIMSK1 = (1 << OCIE1A);              // enable compare match A interrupt
 
     // enable pin-change interrupt on encoder clock
@@ -49,8 +45,8 @@ ISR(PCINT1_vect)
 
         // debounce: turn off the pin-change interrupt for awhile
         uint16_t blackout_end = TCNT1 + BOUNCE_CYCLES;
-        if (blackout_end >= 50000)
-            blackout_end -= 50000;
+        if (blackout_end >= OCR1A)
+            blackout_end -= OCR1A;
         OCR1B = blackout_end;
         PCICR &= ~(1 << PCIE1);
         TIMSK1 |= (1 << OCIE1B);

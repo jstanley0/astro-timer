@@ -92,8 +92,13 @@ static unsigned char EditNum(uint8_t *num, uint8_t buttons, int8_t encoder_diff,
 
 void adjust_brightness(int8_t encoder_diff)
 {
-    uint8_t diff = encoder_diff ? encoder_diff : 1;
-    bright = (bright - diff) & 3;
+    int8_t diff = encoder_diff ? encoder_diff : 1;
+    int8_t new_val = (int8_t)bright - diff;
+    while (new_val < 0)
+        new_val += 6;
+    while (new_val > 5)
+        new_val -= 6;
+    bright = (uint8_t)new_val;
     display_set_brightness(bright);
 }
 
@@ -228,7 +233,7 @@ void run()
             break;
 */
         case ST_BRIGHT:
-            DisplayAlnum(LETTER_B, 4 - bright, 0, 0);
+            DisplayAlnum(LETTER_B, 6 - bright, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_TIME;
             } else if ((buttons & BUTTON_SET) || encoder_diff) {
@@ -406,6 +411,7 @@ void run()
 
 int main(void)
 {
+    sysclk_init();
     io_init();
     blip();
 

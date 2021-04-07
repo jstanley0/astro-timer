@@ -30,7 +30,7 @@ void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp);
 // dp = bit 0 = low digit decimal point on; bit 1 = high digit decimal point on
 void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uint8_t dp);
 
-// valid brightness levels: 0-3
+// valid brightness levels: 0-5
 void display_set_brightness(uint8_t bright);
 
 // indeterminate progress indicator

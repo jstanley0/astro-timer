@@ -49,3 +49,21 @@ still, on the balance I think I prefer staying at 1MHz for now.
 
 (could we run at 2 or 4MHz? problem is there isn't a timer0 prescaler
 between 1/8 and 1/64)
+
+aha! just use the 1/64 prescaler and cut the cycle time in fourths by setting
+OCR0A to 64. then we can run at 2MHz with no display glitches! let's see
+how this affects power usage...
+
+these times are all 4-digit, counting times, and they're not apples-to-apples
+with the others because there are six brightness levels and the lowest and
+highest are outside the prior range.
+
+b1 = 0.6mA
+b2 = 0.8mA
+b3 = 1.3mA
+b4 = 2.4mA
+b5 = 4.4mA
+b6 = 8.7mA
+
+I think it's fair to say there's no real power consumption penalty at 2MHz,
+and the display improvements are readily apparent, so I will make the change!
