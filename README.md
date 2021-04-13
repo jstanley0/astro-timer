@@ -1,19 +1,35 @@
 astro-timer
 ===========
 
-firmware for an ATMEGAx8-powered astrophotography timer
+hardware and firmware for an ATMEGAx8-powered astrophotography timer
 
 ![astro-timer](https://user-images.githubusercontent.com/713453/112564756-73facf00-8da1-11eb-8924-9507fb7b1897.jpg)
 
 ---
 
-This is the code behind a timer I built for astrophotography. The idea is, you
-plug this thing into your camera's remote shutter release port, set the camera
-to bulb mode, and let this thing take a series of long-exposure photos.
-
+This device controls a camera (in bulb mode) for a sequence of light frames
+for astrophotography. The camera is connected to the 2.5mm jack.
 The exposure length, exposure count, time between exposures, and optionally
 mirror lockup time can be set. Additionally, screen brightness can be adjusted,
 and preferences can be saved in NVRAM.
+
+Controls (from left to right):
+ - Set button
+ - Select button
+ - Fancy control knob
+
+Usage:
+ - The select button cycles between parameters (exposure length, time between
+   exposures, exposure count, mirror lockup time, brightness)
+ - When rotated, the fancy control knob adjusts the currently visible parameter.
+   If this parameter is exposure length or time between exposures, it adjusts
+   it one stop at a time. It is possible to set the minutes and seconds to
+   arbitrary values via the Set button.
+ - When pressed, the fancy control knob starts or stops the exposure sequence.
+ - While the exposure sequence is running,
+   - The set button adjusts the screen brightness.
+   - The select button toggles between displaying remaning time vs remaining
+     exposure count.
 
 Parts:
  - Atmel ATMEGA328P microcontroller (a prior version used ATMEGA48 and the code 
