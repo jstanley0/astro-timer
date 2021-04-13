@@ -17,7 +17,7 @@ inside_height=pcb_level+pcb_thickness+control_thickness;
 
 wall_thickness=2;
 floor_thickness=1.5;
-overlap_thickness=4.5;
+overlap_thickness=5;
 overlap_delta=0.25;
 
 screw_sep_x=59.13;
@@ -46,6 +46,7 @@ screen_width=46;
 screen_height=12.88;
 screen_margin=0.5;
 screen_support_width=2;
+screen_support_thickness=3;
 
 sw23_offset_y=5.64; // 5.74 in newest PCB design
 sw3_offset_x=33.31; // 33.29
@@ -70,10 +71,10 @@ jack_offset_y=30.97;
 jack_radius=4.8;
 jack_height=2.65;
 
-jack_body_offset_y=27.5;
+jack_body_offset_y=28;
 jack_body_size_x=11.5;
-jack_body_size_y=7;
-jack_body_size_z=6;
+jack_body_size_y=6;
+jack_body_size_z=5.5;
 
 isp_offset_x=48.28; // 49.04 in newest PCB design
 isp_offset_y=1.41;  //  1.32 
@@ -186,7 +187,7 @@ module lid()
             translate([pcb_margin+screen_offset_x-screen_margin-screen_support_width,
                        pcb_margin+screen_offset_y-screen_margin-screen_support_width,
                        0])
-                cube([screen_width+screen_support_width*2+screen_margin*2, screen_height+screen_support_width+screen_margin*2, overlap_thickness]);
+                cube([screen_width+screen_support_width*2+screen_margin*2, screen_height+screen_support_width+screen_margin*2, screen_support_thickness]);
             
         }
         union()
