@@ -5,6 +5,8 @@ hardware and firmware for an ATMEGAx8-powered astrophotography timer
 
 ![astro-timer](https://user-images.githubusercontent.com/713453/112564756-73facf00-8da1-11eb-8924-9507fb7b1897.jpg)
 
+![astro-timer in a 3D-printed enclosure](https://user-images.githubusercontent.com/713453/114489144-de987100-9bcf-11eb-8922-67403adf2154.jpg)
+
 ---
 
 This device controls a camera (in bulb mode) for a sequence of light frames
