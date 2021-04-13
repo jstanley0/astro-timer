@@ -76,10 +76,10 @@ jack_body_size_x=11.5;
 jack_body_size_y=6;
 jack_body_size_z=5.5;
 
-isp_offset_x=48.28; // 49.04 in newest PCB design
-isp_offset_y=1.41;  //  1.32 
-isp_width=7.85;
-isp_height=5.32;
+isp_offset_x=45.46;
+isp_offset_y=-pcb_margin-wall_thickness-overlap_delta;
+isp_width=13.5;
+isp_height=10.5;
 
 
 module screw(rotation)
@@ -264,7 +264,7 @@ module lid()
             //translate([pcb_margin + isp_offset_x,
             //           pcb_margin + isp_offset_y,
             //           -floor_thickness])
-            //   cube([isp_width, isp_height, floor_thickness]);
+            //   cube([isp_width, isp_height, floor_thickness+overlap_thickness]);
             
         }
     }
