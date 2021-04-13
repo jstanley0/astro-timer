@@ -71,10 +71,10 @@ jack_offset_y=30.97;
 jack_radius=4.8;
 jack_height=2.65;
 
-jack_body_offset_y=28;
 jack_body_size_x=11.5;
 jack_body_size_y=6;
 jack_body_size_z=5.5;
+jack_body_offset_y=jack_offset_y-jack_body_size_y/2;
 
 isp_offset_x=45.46;
 isp_offset_y=-pcb_margin-wall_thickness-overlap_delta;
@@ -126,10 +126,10 @@ module box()
         cube([inside_width, inside_length, inside_height]);
 
         // jack
-        translate([inside_width, jack_offset_y, pcb_level + pcb_thickness + jack_height])
+        translate([inside_width, pcb_margin + jack_offset_y, pcb_level + pcb_thickness + jack_height])
             rotate([0, 90, 0])
             cylinder(wall_thickness, jack_radius, jack_radius, $fn=28);
-        translate([inside_width + wall_thickness / 2, jack_offset_y, pcb_level + pcb_thickness + jack_height + jack_radius/2])
+        translate([inside_width + wall_thickness / 2, pcb_margin + jack_offset_y, pcb_level + pcb_thickness + jack_height + jack_radius/2])
             cube([wall_thickness, jack_radius*2, jack_radius], true);
     }
     translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
@@ -247,15 +247,15 @@ module lid()
                cube([enc_nub_width, enc_nub_height, floor_thickness], true);                             
             
             // jack
-            translate([-wall_thickness, jack_offset_y, control_thickness - jack_height])
+            translate([-wall_thickness, pcb_margin + jack_offset_y, control_thickness - jack_height])
                 rotate([0, 90, 0])
                 cylinder(wall_thickness*2+overlap_delta, jack_radius, jack_radius, $fn=28);
-            translate([wall_thickness/2 + overlap_delta, jack_offset_y, control_thickness - jack_height + jack_radius/2])
+            translate([wall_thickness/2 + overlap_delta, pcb_margin + jack_offset_y, control_thickness - jack_height + jack_radius/2])
                 cube([wall_thickness, jack_radius*2, jack_radius], true);                
                 
             // jack body
             translate([wall_thickness + overlap_delta,
-                       jack_body_offset_y,
+                       pcb_margin + jack_body_offset_y,
                        control_thickness - jack_body_size_z])
                cube([jack_body_size_x, jack_body_size_y, jack_body_size_z]);
                        
