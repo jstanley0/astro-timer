@@ -8,6 +8,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <util/delay.h>
 
 #include "io.h"
 #include "input.h"
@@ -160,6 +161,11 @@ void run()
         if (state >= ST_RUN_PRIME || buttons || encoder_diff) {
             idle_cycles = 0;
         } else if (++idle_cycles == IDLE_TIMEOUT_CYCLES) {
+            break;
+        }
+
+        // soft power-off
+        if ((buttons & (BUTTON_START | BUTTON_HOLD)) == (BUTTON_START | BUTTON_HOLD)) {
             break;
         }
 
@@ -398,12 +404,12 @@ void run()
                 }
 
                 state = prevstate;
-            } else if ((count > 1) && ((buttons & BUTTON_SELECT) || encoder_diff)) {
+            } else if ((count > 1) && (buttons & BUTTON_SELECT)) {
                 // toggle display, time left vs. count left
                 cmode = (cmode + 1) & 1;
-            } else if (buttons & BUTTON_SET) {
+            } else if (buttons & BUTTON_SET || encoder_diff) {
                 // adjust brightness
-                adjust_brightness(0);
+                adjust_brightness(encoder_diff);
             }
         }
     }
@@ -432,6 +438,7 @@ int main(void)
 
         // .. in which case we shut down, to save battery power.
         // but we leave a pin change interrupt running, so a button press will wake us up
+        acknowledge_power_off();
         power_down();
     }
 }

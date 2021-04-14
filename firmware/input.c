@@ -79,6 +79,7 @@ uint8_t GetButtons()
     }
 
     if (curState != prevState) {
+        repeat = 0;
         uint8_t pressed = ~prevState & curState;
         prevState = curState;
         return pressed;

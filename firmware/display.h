@@ -13,6 +13,8 @@ volatile uint8_t display[5];
 #define LETTER_A 0b00010001
 #define LETTER_V 0b10000011
 #define LETTER_E 0b01100001
+#define LETTER_O 0b00000011
+#define LETTER_F 0b01110001
 
 void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp);
 

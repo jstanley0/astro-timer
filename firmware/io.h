@@ -44,5 +44,8 @@ void blip();
 // shut down unnecessary peripherals to save power
 void power_init();
 
+// let the user know we're turning off
+void acknowledge_power_off();
+
 // to save power if the device is left idle too long
 void power_down();

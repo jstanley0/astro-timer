@@ -38,7 +38,20 @@ void power_init()
     PRR = (1 << PRTWI) | (1 << PRSPI) | (1 << PRUSART0) | (1 << PRADC);
 }
 
-// go into as deep a sleep as we can manage, waking up on input of any kind
+// display "OFF" for a second (or longer)
+void acknowledge_power_off()
+{
+    display[0] = EMPTY;
+    display[1] = LETTER_O;
+    display[2] = LETTER_F;
+    display[3] = LETTER_F;
+    display[4] = EMPTY;
+    _delay_ms(1000);
+    // wait for the button to be released, so the release event doesn't wake us up again
+    while(BUTTON_STATE() != 0x7);
+}
+
+// go into as deep a sleep as we can manage, waking up on button input
 void power_down()
 {
     // stop interrupts so things don't change out from underneath us
@@ -57,9 +70,10 @@ void power_down()
     uint8_t saved_TCCR0B = TCCR0B;
     TCCR0B = 0;
 
-    // save pin-change interrupt state, and enable the interrupt on all inputs
+    // save pin-change interrupt state, and enable the interrupt on button input
+    // (not encoder-turning input, because that can easily happen in a camera bag)
     uint8_t saved_PCMSK1 = PCMSK1;
-    PCMSK1 = 0b00011111;
+    PCMSK1 = 0b00011100;
     uint8_t saved_PCICR = PCICR;
     PCICR = (1 << PCIE1);
 
