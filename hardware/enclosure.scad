@@ -29,10 +29,9 @@ screw_depth=8;
 screw_ledge_depth=0.5;
 screw_ledge_r=3;
 
-standoff_int_r=1.5;
+standoff_int_r=1.4;
 standoff_ext_r=2.5;
-standoff_overlap=1.5;
-standoff_support_size=standoff_ext_r*3;
+standoff_overlap=0.8;
 
 screw_spacer_int_r=2;
 standoff_spacer_int_r=1.75;
@@ -81,6 +80,16 @@ isp_offset_y=-pcb_margin-wall_thickness-overlap_delta;
 isp_width=13.5;
 isp_height=10.5;
 
+module standoff_support(int_r, ext_r)
+{
+    dist = (inside_width-screw_sep_x)/2;
+    translate([-dist, -dist, 0]) {
+        cube([dist+int_r, dist+int_r, pcb_level]);
+        cube([dist+ext_r, dist, pcb_level]);
+        cube([dist, dist+ext_r, pcb_level]);
+    }
+}
+
 
 module screw(rotation)
 {
@@ -89,8 +98,7 @@ module screw(rotation)
     {
         union() {
             cylinder(pcb_level, screw_ext_r, screw_ext_r, $fn=32);
-            translate([-screw_ext_r, -screw_ext_r, 0])
-                cube([screw_ext_r, screw_ext_r, pcb_level]);
+            standoff_support(screw_int_r, screw_ext_r);
         }
         translate([0, 0, pcb_level - screw_depth - screw_ledge_depth])
             cylinder(screw_depth, screw_int_r, screw_int_r, $fn=24);
@@ -105,10 +113,8 @@ module standoff(rotation)
     union()
     {
         cylinder(pcb_level, standoff_ext_r, standoff_ext_r, $fn=32);
-        translate([0, 0, pcb_level])
-            sphere(standoff_int_r, $fn=16);
-        translate([-2.33*standoff_ext_r, -2.33*standoff_ext_r, 0])
-            cube([standoff_support_size, standoff_support_size, pcb_level]);
+        cylinder(pcb_level + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);
+        standoff_support(standoff_int_r, standoff_ext_r);
     }
 }
 
