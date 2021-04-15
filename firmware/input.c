@@ -39,9 +39,9 @@ ISR(TIMER1_COMPB_vect)
 ISR(PCINT1_vect)
 {
     uint8_t clock = (PINC & 1);
-    // detect rising edge
-    if (clock && !prev_clock) {
-        encoder_ticks += (PINC & 2) ? -1 * ENCODER_MULTIPLIER : 1 * ENCODER_MULTIPLIER;
+    // detect falling edge
+    if (prev_clock && !clock) {
+        encoder_ticks += (PINC & 2) ? ENCODER_MULTIPLIER : -1 * ENCODER_MULTIPLIER;
 
         // debounce: turn off the pin-change interrupt for awhile
         uint16_t blackout_end = TCNT1 + BOUNCE_CYCLES;
