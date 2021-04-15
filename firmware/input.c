@@ -4,7 +4,7 @@
 #include "io.h"
 
 // blackout time in units of 4 microseconds
-#define BOUNCE_CYCLES 2500
+#define BOUNCE_CYCLES 5000
 
 void input_init()
 {
