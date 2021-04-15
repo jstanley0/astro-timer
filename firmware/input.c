@@ -13,7 +13,7 @@ void input_init()
     TIMSK1 = (1 << OCIE1A);              // enable compare match A interrupt
 
     // enable pin-change interrupt on encoder clock
-    PCMSK1 = (1 << PCINT8);
+    PCMSK1 = (1 << PCINT9);
     PCICR = (1 << PCIE1);
 }
 
@@ -32,16 +32,16 @@ ISR(TIMER1_COMPB_vect)
 {
     PCICR |= (1 << PCIE1);
     TIMSK1 &= ~(1 << OCIE1B);
-    prev_clock = (PINC & 1);
+    prev_clock = (PINC & 2);
 }
 
 // triggers when the encoder is moved
 ISR(PCINT1_vect)
 {
-    uint8_t clock = (PINC & 1);
+    uint8_t clock = (PINC & 2);
     // detect falling edge
     if (prev_clock && !clock) {
-        encoder_ticks += (PINC & 2) ? ENCODER_MULTIPLIER : -1 * ENCODER_MULTIPLIER;
+        encoder_ticks += (PINC & 1) ? -1 * ENCODER_MULTIPLIER : ENCODER_MULTIPLIER;
 
         // debounce: turn off the pin-change interrupt for awhile
         uint16_t blackout_end = TCNT1 + BOUNCE_CYCLES;
