@@ -25,29 +25,29 @@ ISR(TIMER1_COMPA_vect)
     input_ready = 1;
 }
 
-// the following ISR is taken from
+// the following ISR is adapted from
 // https://chome.nerpa.tech/mcu/rotary-encoder-interrupt-service-routine-for-avr-micros/
-
-/* encoder routine. Expects encoder with four state changes between detents */
-/* and both pins open on detent */
+// expects encoder with four state changes between detents and both pins open on detent
 ISR(PCINT1_vect)
 {
-  static uint8_t old_AB = 3;  //lookup table index
-  static int8_t encval = 0;   //encoder value
-  static const int8_t enc_states [] PROGMEM =
-  {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};  //encoder lookup table
-  /**/
-  old_AB <<=2;  //remember previous state
-  old_AB |= ( PINC & 0x03 );
-  encval += pgm_read_byte(&(enc_states[( old_AB & 0x0f )]));
-  /* post "Navigation forward/reverse" event */
-  if( encval > 3 ) {  //four steps forward
-    encoder_ticks -= ENCODER_MULTIPLIER;
-    encval = 0;
-  }
-  else if( encval < -3 ) {  //four steps backwards
-    encoder_ticks += ENCODER_MULTIPLIER;
-    encval = 0;
+  static uint8_t enc_bits = 0b0011;
+  static int8_t enc_cycle = 0;
+
+  // indexed by bits [prevB prevA curB curA], indicates the direction of rotation
+  // or 0 for no change/bouncing state
+  static const int8_t enc_states[] PROGMEM = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};
+  enc_bits <<= 2;
+  enc_bits |= (PINC & 0b11);
+  enc_bits &= 0b1111;
+  enc_cycle += pgm_read_byte(&enc_states[enc_bits]);
+
+  // see if we've moved from detent to detent, and record the tick
+  if(enc_cycle > 3) {
+    encoder_ticks += ENC_CW;
+    enc_cycle = 0;
+  } else if(enc_cycle < -3) {
+    encoder_ticks -= ENC_CW;
+    enc_cycle = 0;
   }
 }
 

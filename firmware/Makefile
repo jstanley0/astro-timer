@@ -4,11 +4,11 @@ PROGRAMMER = -c usbtiny
 OBJECTS    = main.o clock.o display.o input.o io.o settings.o
 FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
 
-# use `make -e ENCODER_MULTIPLIER=-1` if the encoder ticks the opposite direction from what you expect
-ENCODER_MULTIPLIER = 1
+# use `make -e ENC_CW=-1` if the encoder ticks the opposite direction from what you expect
+ENC_CW = 1
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -DENCODER_MULTIPLIER=$(ENCODER_MULTIPLIER) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -DENC_CW=$(ENC_CW) -mmcu=$(DEVICE)
 
 # symbolic targets:
 all:	main.hex
