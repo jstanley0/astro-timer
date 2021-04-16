@@ -11,7 +11,7 @@
 #include "settings.h"
 
 // 0 = on since we're using a common anode display
-const uint8_t digits[10] PROGMEM = {
+const uint8_t digits[16] PROGMEM = {
     0b00000011, // 0
     0b10011111, // 1
     0b00100101, // 2
@@ -22,6 +22,12 @@ const uint8_t digits[10] PROGMEM = {
     0b00011111, // 7
     0b00000001, // 8
     0b00001001, // 9
+    0b00010001, // A
+    0b11000001, // B
+    0b01100011, // C
+    0b10000101, // D
+    0b01100001, // E
+    0b01110001  // F
 };
 
 void display_init()
@@ -166,6 +172,12 @@ void Display3(int16_t num, uint8_t letter, uint8_t dp_pos, uint8_t degree)
     }
     display[3] = letter;
     display[4] = degree ? APOS : EMPTY;
+}
+
+void DisplayHex(uint8_t num, uint8_t pos)
+{
+    display[pos] = pgm_read_byte(&digits[num >> 4]);
+    display[pos + 1] = pgm_read_byte(&digits[num & 0xF]);
 }
 
 void display_set_brightness(uint8_t bright)

@@ -38,6 +38,9 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
 // acceptable num range: -99 to 999; dp_pos is offset from left
 void Display3(int16_t num, uint8_t letter, uint8_t dp_pos, uint8_t degree);
 
+// display a byte in hex at the given position
+void DisplayHex(uint8_t num, uint8_t pos);
+
 // valid brightness levels: 0-5
 void display_set_brightness(uint8_t bright);
 

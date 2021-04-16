@@ -8,6 +8,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/boot.h>
 #include <util/delay.h>
 
 #include "io.h"
@@ -104,12 +105,19 @@ void adjust_brightness(int8_t encoder_diff)
     display_set_brightness(bright);
 }
 
+void display_signature_byte(uint8_t addr)
+{
+    DisplayHex(addr, HIGH_POS);
+    DisplayHex(boot_signature_byte_get(addr), LOW_POS);
+    display[EXTRA_POS] = COLON;
+}
+
 enum State {
     // main exposure menu
     ST_TIME, ST_DELAY, ST_COUNT, ST_MLU,
     // options
     ST_BRIGHT, ST_SAVED, ST_POWER_METER,
-    ST_TEMP_SENSOR,
+    ST_TEMP_SENSOR, ST_SIGNATURE_ROW,
     // edit states
     ST_TIME_SET_MINS, ST_TIME_SET_SECS,
     ST_DELAY_SET_MINS, ST_DELAY_SET_SECS,
@@ -154,6 +162,7 @@ void run()
     int8_t delay_stop = -1;
     uint16_t idle_cycles = 0;
     int8_t useF = 0;
+    uint8_t sig = 0;
 
     for(;;)
     {
@@ -273,9 +282,18 @@ void run()
                 state = ST_TIME;
             } else if (buttons & BUTTON_START) {
                 turn_adc_off();
-                state = ST_BRIGHT;
+                state = ST_SIGNATURE_ROW;
             } else if (buttons & BUTTON_SET) {
                 useF = !useF;
+            }
+            break;
+        case ST_SIGNATURE_ROW:
+            display_signature_byte(sig);
+            sig = (sig + encoder_diff) & 0x1f;
+            if (buttons & BUTTON_START) {
+                state = ST_BRIGHT;
+            } else if (buttons & BUTTON_SELECT) {
+                state = ST_TIME;
             }
             break;
         case ST_TIME_SET_MINS:
