@@ -1,7 +1,7 @@
 DEVICE     = atmega328p
 CLOCK      = 2000000
 PROGRAMMER = -c usbtiny
-OBJECTS    = main.o clock.o display.o input.o io.o settings.o
+OBJECTS    = main.o clock.o display.o input.o io.o settings.o sensors.o
 FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
 
 # use `make -e ENC_CW=-1` if the encoder ticks the opposite direction from what you expect

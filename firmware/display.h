@@ -15,6 +15,8 @@ volatile uint8_t display[5];
 #define LETTER_E 0b01100001
 #define LETTER_O 0b00000011
 #define LETTER_F 0b01110001
+#define LETTER_v 0b11000111
+#define MINUS_SIGN 0b11111101
 
 void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp);
 
@@ -31,6 +33,10 @@ void DisplayAlnum(char letter, uint8_t num, uint8_t blink_mask, uint8_t dp);
 //         bit 1 = ...           ones place if num == 0
 // dp = bit 0 = low digit decimal point on; bit 1 = high digit decimal point on
 void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uint8_t dp);
+
+// display a three digit number followed by a letter, optionally with decimal point and/or degree sign
+// acceptable num range: -99 to 999; dp_pos is offset from left
+void Display3(int16_t num, uint8_t letter, uint8_t dp_pos, uint8_t degree);
 
 // valid brightness levels: 0-5
 void display_set_brightness(uint8_t bright);

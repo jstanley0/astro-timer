@@ -15,6 +15,7 @@
 #include "clock.h"
 #include "display.h"
 #include "settings.h"
+#include "sensors.h"
 
 // 20 minutes (with 1200 I/O polling cycles per minute)
 #define IDLE_TIMEOUT_CYCLES 20 * 1200
@@ -107,7 +108,8 @@ enum State {
     // main exposure menu
     ST_TIME, ST_DELAY, ST_COUNT, ST_MLU,
     // options
-    ST_BRIGHT, ST_SAVED,
+    ST_BRIGHT, ST_SAVED, ST_POWER_METER,
+    ST_TEMP_SENSOR,
     // edit states
     ST_TIME_SET_MINS, ST_TIME_SET_SECS,
     ST_DELAY_SET_MINS, ST_DELAY_SET_SECS,
@@ -151,6 +153,7 @@ void run()
     int8_t stime_stop = -1;
     int8_t delay_stop = -1;
     uint16_t idle_cycles = 0;
+    int8_t useF = 0;
 
     for(;;)
     {
@@ -161,11 +164,13 @@ void run()
         if (state >= ST_RUN_PRIME || buttons || encoder_diff) {
             idle_cycles = 0;
         } else if (++idle_cycles == IDLE_TIMEOUT_CYCLES) {
+            turn_adc_off();
             break;
         }
 
         // soft power-off
         if ((buttons & (BUTTON_START | BUTTON_HOLD)) == (BUTTON_START | BUTTON_HOLD)) {
+            turn_adc_off();
             break;
         }
 
@@ -224,29 +229,20 @@ void run()
                 increment_num(&mlu, encoder_diff, 99);
             }
             break;
-/* I'll put this in once there's more than one option ;)
-        case ST_OPTIONS:
-            display[0] = '\xC0';    // 00111111 = 'O'
-            display[1] = '\x8C';    // 01110011 = 'P'
-            display[2] = EMPTY;
-            display[3] = '0x87';    // 01111000 = 't'
-            display[4] = '0x92';    // 01101101 = 'S'
-            if (buttons & BUTTON_SELECT) {
-                state = ST_TIME;
-            } else if (buttons & BUTTON_SET) {
-                state = ST_BRIGHT;
-            }
-            break;
-*/
         case ST_BRIGHT:
             DisplayAlnum(LETTER_B, 6 - bright, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_TIME;
-            } else if ((buttons & BUTTON_SET) || encoder_diff) {
+            } else if (encoder_diff) {
                 adjust_brightness(encoder_diff);
                 display_set_brightness(bright);
             } else if (buttons & BUTTON_START) {
+                turn_adc_on();
+                init_power_meter();
+                state = ST_POWER_METER;
+            } else if (buttons & BUTTON_SET) {
                 Save();
+                prevstate = state;
                 state = ST_SAVED;
                 remaining = 15;
             }
@@ -258,7 +254,29 @@ void run()
             display[3] = LETTER_E;
             display[4] = EMPTY;
             if (--remaining == 0)
+                state = prevstate;
+            break;
+        case ST_POWER_METER:
+            display_power_meter();
+            if (buttons & BUTTON_SELECT) {
+                turn_adc_off();
+                state = ST_TIME;
+            } else if (buttons & BUTTON_START) {
+                init_temp_sensor();
+                state = ST_TEMP_SENSOR;
+            }
+            break;
+        case ST_TEMP_SENSOR:
+            display_temp_sensor(useF);
+            if (buttons & BUTTON_SELECT) {
+                turn_adc_off();
+                state = ST_TIME;
+            } else if (buttons & BUTTON_START) {
+                turn_adc_off();
                 state = ST_BRIGHT;
+            } else if (buttons & BUTTON_SET) {
+                useF = !useF;
+            }
             break;
         case ST_TIME_SET_MINS:
             DisplayNum(stime[0], HIGH_POS, 0x40, 0, 0);

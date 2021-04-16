@@ -93,7 +93,7 @@ ISR(TIMER0_COMPB_vect)
     }
 }
 
-void IntToDigs2(int n, uint8_t digs[4])
+void IntToDigs2(int n, uint8_t digs[2])
 {
     digs[0] = 0;
     while(n >= 10)
@@ -110,26 +110,17 @@ void IntToDigs2(int n, uint8_t digs[4])
     }
 }
 
-/*
-void IntToDigs4(int n, uint8_t digs[4])
+void IntToDigs3(uint16_t n, uint8_t digs[3])
 {
     digs[0] = 0;
-    while(n >= 1000)
-    {
-        n -= 1000;
-        ++digs[0];
-    }
-
-    digs[1] = 0;
     while(n >= 100)
     {
         n -= 100;
-        ++digs[1];
+        ++digs[0];
     }
 
-    IntToDigs2(n, &digs[2]);
+    IntToDigs2(n, &digs[1]);
 }
-*/
 
 #define DECIMAL_POINT 1
 
@@ -157,6 +148,24 @@ void DisplayNum(uint8_t num, uint8_t pos, uint8_t blink_mask, uint8_t strip, uin
             : pgm_read_byte(&digits[digs[1]]);
         if (dp & 1) display[pos + 1] ^= DECIMAL_POINT;
     }
+}
+
+void Display3(int16_t num, uint8_t letter, uint8_t dp_pos, uint8_t degree)
+{
+    uint8_t digs[3];
+    if (num < 0) {
+        IntToDigs2(-num, &digs[0]);
+        display[0] = MINUS_SIGN;
+        display[1] = pgm_read_byte(&digits[digs[0]]) ^ ((dp_pos == 0) ? DECIMAL_POINT : 0);
+        display[2] = pgm_read_byte(&digits[digs[1]]) ^ ((dp_pos == 1) ? DECIMAL_POINT : 0);
+    } else {
+        IntToDigs3(num, &digs[0]);
+        for(uint8_t p = 0; p < 3; ++p) {
+            display[p] = pgm_read_byte(&digits[digs[p]]) ^ ((dp_pos == p) ? DECIMAL_POINT : 0);
+        }
+    }
+    display[3] = letter;
+    display[4] = degree ? APOS : EMPTY;
 }
 
 void display_set_brightness(uint8_t bright)
