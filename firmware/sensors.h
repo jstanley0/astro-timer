@@ -7,4 +7,4 @@ void init_power_meter();
 void display_power_meter();
 
 void init_temp_sensor();
-void display_temp_sensor(int8_t useF);
+void display_temp_sensor();

@@ -20,17 +20,26 @@ void init_power_meter()
     ADMUX = (1 << REFS0) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1);
 }
 
-void display_power_meter()
+uint16_t sample_adc()
 {
+    uint16_t sam = 0;
     if (ADCSRA & (1 << ADIF)) {
-        // VCC = 1.1V * 1024 / adc; we will retrieve hundredths here
-        uint16_t cv = (1024L * 110) / ADCW;
-        // since the AVR's voltage range is 1.8 ... 5.5, I'm not going to worry about >= 10 V
-        Display3(cv, LETTER_v, 0, 0);
-
+        sam = ADCW;
         ADCSRA |= (1 << ADIF);
     }
     ADCSRA |= (1 << ADSC);
+    return sam;
+}
+
+void display_power_meter()
+{
+    uint16_t sam = sample_adc();
+    if (sam) {
+        // VCC = 1.1V * 1024 / adc; we will retrieve hundredths here
+        uint16_t cv = (1024L * 110) / sam;
+        // since the AVR's voltage range is 1.8 ... 5.5, I'm not going to worry about >= 10 V
+        Display3(cv, LETTER_v, 0, 0);
+    }
 }
 
 void init_temp_sensor()
@@ -39,21 +48,13 @@ void init_temp_sensor()
     ADMUX = (1 << REFS1) | (1 << REFS0) | (1 << MUX3);
 }
 
-void display_temp_sensor(int8_t useF)
+void display_temp_sensor()
 {
-    // TODO figure out how to read the real values from the factory calibration
-    static const uint8_t TS_OFFSET = 21;//boot_signature_byte_get(2);
-    static const uint8_t TS_GAIN = 164;//boot_signature_byte_get(3);
-    if (ADCSRA & (1 << ADIF)) {
-        int16_t deg;
-        if (useF) {
-            deg = (9 * (((long)ADCW - (273 + 100 - TS_OFFSET)) * 128)) / (5 * TS_GAIN) + 45 + 32;
-        } else {
-            deg = (((long)ADCW - (273 + 100 - TS_OFFSET)) * 128) / TS_GAIN + 25;
-        }
-        Display3(deg, useF ? LETTER_F : LETTER_C, 99, 1);
-
-        ADCSRA |= (1 << ADIF);
+    // it turns out there *aren't* factory calibration values stored in the signature row
+    // so I will just display the raw sample for now, as the datasheet examples are way off
+    // I will need two readings at widely separated temperatures to compute the slope and y-intercept
+    uint16_t sam = sample_adc();
+    if (sam) {
+        Display3(sam, EMPTY, 99, 1);
     }
-    ADCSRA |= (1 << ADSC);
 }

@@ -161,7 +161,6 @@ void run()
     int8_t stime_stop = -1;
     int8_t delay_stop = -1;
     uint16_t idle_cycles = 0;
-    int8_t useF = 0;
     uint8_t sig = 0;
 
     for(;;)
@@ -273,18 +272,22 @@ void run()
             } else if (buttons & BUTTON_START) {
                 init_temp_sensor();
                 state = ST_TEMP_SENSOR;
+            } else if (encoder_diff) {
+                adjust_brightness(encoder_diff);
+                display_set_brightness(bright);
             }
             break;
         case ST_TEMP_SENSOR:
-            display_temp_sensor(useF);
+            display_temp_sensor();
             if (buttons & BUTTON_SELECT) {
                 turn_adc_off();
                 state = ST_TIME;
             } else if (buttons & BUTTON_START) {
                 turn_adc_off();
                 state = ST_SIGNATURE_ROW;
-            } else if (buttons & BUTTON_SET) {
-                useF = !useF;
+            } else if (encoder_diff) {
+                adjust_brightness(encoder_diff);
+                display_set_brightness(bright);
             }
             break;
         case ST_SIGNATURE_ROW:
