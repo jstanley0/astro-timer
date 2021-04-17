@@ -7,7 +7,7 @@ FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
 # use `make -e ENC_CW=-1` if the encoder ticks the opposite direction from what you expect
 ENC_CW = 1
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B 5
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -DENC_CW=$(ENC_CW) -mmcu=$(DEVICE)
 
 # symbolic targets:

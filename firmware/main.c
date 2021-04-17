@@ -411,8 +411,15 @@ void run()
         case ST_WAIT:
             if (cmode == 0) {
                 // wait time
-                DisplayNum(gMin, HIGH_POS, 0, 3, CLOCK_BLINKING() ? 0 : 1);
-                DisplayNum(gSec, LOW_POS, 0, 0, 0);
+                // except, if there are < 10 seconds to go, we will borrow
+                // the minutes field to display the remaining exposure count as well
+                if (gMin == 0 && gSec < 10) {
+                    DisplayNum(remaining, HIGH_POS, 0, 1, CLOCK_BLINKING() ? 0 : 1);
+                    DisplayNum(gSec, LOW_POS, 0, 1, 0);
+                } else {
+                    DisplayNum(gMin, HIGH_POS, 0, 3, CLOCK_BLINKING() ? 0 : 1);
+                    DisplayNum(gSec, LOW_POS, 0, 0, 0);
+                }
             } else {
                 // remaining exposures
                 DisplayAlnum(LETTER_C, remaining, 0, CLOCK_BLINKING() ? 0 : 4);
