@@ -6,6 +6,8 @@ Exposure Timer MkII TODO:
  [x] option 1: press Select to toggle, like the BF currently does.
  [n] option 2: be a geek, and display counts < 16 in binary on the DP leds. :)
   -> tried it; it's really not that readable.
+ [x] option 3: display the count on the left side during the 10-second countdown
+     to the next exposure!
 
 [x] ability to save settings in eeprom.
  [x] brightness
@@ -17,7 +19,7 @@ Exposure Timer MkII TODO:
 
 [x] fix the sleep code; counting sleeps does not really work
     because we don't know that the MCU will actually get to sleep
-    between every interrupt.  
+    between every interrupt.
 
 [x] eliminate state-change latency in auto state changes
 
@@ -29,17 +31,31 @@ Exposure Timer MkII TODO:
  [x] make symbolic names for all display digits
  [ ] be consistent in '\xZZ' use (and see if it saves us anything)
 
-[ ] double-buffer the display to prevent flicker.
+[x] double-buffer the display to prevent flicker.
   -> will transfer to the frame buffer with interrupts disabled.
    -> actually, I'm skeptical here.  we only draw one character per interrupt.
       so we can have partial displays either way.  so long as I'm drawing the
       display in a spatially localized way, this might not matter.
+  --> so I think fixing interrupt priority, increasing the prescaler to 1/64
+      and bumping the CPU speed to 2MHz solved the display glitches
 
 [ ] power save mode...
  [x] put MCU in power save mode after idle timeout
    [x] wake up MCU by pushing a button. :D
  [ ] dim and/or turn off LEDs during long exposure?
    -> can currently do this manually...
+ [x] soft power off
 
 [ ] real-time clock mode.  depends on power-save mode above.
+
+[x] battery voltage meter
+  [ ] better place to *put* the battery voltage meter
+
+[ ] fix encoder ISR "backlash" (where it fails to detect a change
+    in direction without an extra click, sometimes)
+
+[ ] fix a CCW twist going "down" from an inferred stop to the same
+    number we are currently staring at :P
+
+[ ] come up with temperature calibration??
 
