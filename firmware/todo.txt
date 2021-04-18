@@ -54,7 +54,7 @@ Exposure Timer MkII TODO:
 [ ] fix encoder ISR "backlash" (where it fails to detect a change
     in direction without an extra click, sometimes)
 
-[ ] fix a CCW twist going "down" from an inferred stop to the same
+[x] fix a CCW twist going "down" from an inferred stop to the same
     number we are currently staring at :P
 
 [ ] come up with temperature calibration??

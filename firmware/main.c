@@ -30,11 +30,12 @@ void adjust_stop(uint8_t min_sec[2], int8_t *current_stop, int8_t encoder_diff)
     if (*current_stop < 0) {
         // the value was manually edited and we're possibly between stops, so find the one to start from
         uint8_t i = 0;
-        // find the first stop that's greater than the current time
-        while(i < STOP_TABLE_SIZE && pgm_read_word(&stop_table[i]) <= secs)
+        // find the first stop that's greater than or equal to the current time
+        while(i < STOP_TABLE_SIZE && pgm_read_word(&stop_table[i]) < secs)
             ++i;
-        // if we're going up, the stop we found is where we want to increment to with our first tick
-        if (encoder_diff > 0)
+        // if we're going up and are between stops, the stop we found is where we want to increment to
+        // with our first tick
+        if (encoder_diff > 0 && pgm_read_word(&stop_table[i]) != secs)
             --i;
         *current_stop = i;
     }
