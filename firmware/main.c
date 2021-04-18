@@ -198,7 +198,7 @@ void run()
         if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
             prevstate = state;
             remaining = count;
-            cmode = 0;
+            cmode = (state == ST_COUNT);
             buttons = 0;
             state = ST_RUN_PRIME;
         }
@@ -513,6 +513,7 @@ void run()
                 clock_stop();
                 SHUTTER_HALFPRESS_OFF();
                 SHUTTER_OFF();
+                display[EXTRA_POS] |= ~APOS;
 
                 // if counting up, freeze the count here
                 if (state == ST_RUN_MANUAL) {
@@ -520,10 +521,10 @@ void run()
                     stime[1] = gSec;
                 }
 
-                state = prevstate;
+                state = cmode ? ST_COUNT : prevstate;
             } else if ((count > 1) && (buttons & BUTTON_SELECT)) {
                 // toggle display, time left vs. count left
-                cmode = (cmode + 1) & 1;
+                cmode ^= 1;
             } else if (buttons & BUTTON_SET || encoder_diff) {
                 // adjust brightness
                 adjust_brightness(encoder_diff);
