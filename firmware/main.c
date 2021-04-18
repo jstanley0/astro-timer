@@ -184,6 +184,17 @@ void run()
             break;
         }
 
+        // global brightness adjust
+        if (buttons & BRIGHT_DOWN) {
+            adjust_brightness(-1);
+            continue;
+        }
+        if (buttons & BRIGHT_UP) {
+            adjust_brightness(1);
+            continue;
+        }
+
+        // start exposure sequence
         if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
             prevstate = state;
             remaining = count;
@@ -285,7 +296,6 @@ void run()
                 state = ST_HPRESS;
             } else if (encoder_diff) {
                 adjust_brightness(encoder_diff);
-                display_set_brightness(bright);
             } else if (buttons & BUTTON_START) {
                 turn_adc_on();
                 init_power_meter();
@@ -314,9 +324,6 @@ void run()
             } else if (buttons & BUTTON_START) {
                 init_temp_sensor();
                 state = ST_TEMP_SENSOR;
-            } else if (encoder_diff) {
-                adjust_brightness(encoder_diff);
-                display_set_brightness(bright);
             }
             break;
         case ST_TEMP_SENSOR:
@@ -327,9 +334,6 @@ void run()
             } else if (buttons & BUTTON_START) {
                 turn_adc_off();
                 state = ST_SIGNATURE_ROW;
-            } else if (encoder_diff) {
-                adjust_brightness(encoder_diff);
-                display_set_brightness(bright);
             }
             break;
         case ST_SIGNATURE_ROW:

@@ -115,11 +115,15 @@ void input_poll(uint8_t *button_mask, int8_t *encoder_diff)
     input_ready = 0;
     uint8_t button_state = GetButtons(encoder_ticks);
     if (encoder_ticks && button_state) {
-        *button_mask = (encoder_ticks > 0) ? BUTTON_SELECT : BUTTON_BACK;
         *encoder_diff = 0;
+        if (button_state & BUTTON_SET) {
+            *button_mask = (encoder_ticks > 0) ? BRIGHT_UP : BRIGHT_DOWN;
+        } else {
+            *button_mask = (encoder_ticks > 0) ? BUTTON_SELECT : BUTTON_BACK;
+        }
     } else {
-        *button_mask = button_state;
         *encoder_diff = encoder_ticks;
+        *button_mask = button_state;
     }
     encoder_ticks = 0;
 }

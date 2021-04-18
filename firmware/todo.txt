@@ -67,5 +67,8 @@ Exposure Timer MkII TODO:
 
 [x] navigate menus by pressing Select and turning the encoder
   --> actually I like pressing and turning the knob
-      currently you can hold _any_ button and turn
+      so you can do either
+
+[x] global brightness adjust by holding Set + turning the knob
+
 
