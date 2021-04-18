@@ -16,7 +16,6 @@ void input_init()
 }
 
 volatile uint8_t input_ready = 0;
-volatile uint8_t prev_clock = 1;
 volatile int8_t encoder_ticks = 0;
 
 // triggers every 50ms, used to sample tac buttons and drive the state machine
@@ -30,25 +29,29 @@ ISR(TIMER1_COMPA_vect)
 // expects encoder with four state changes between detents and both pins open on detent
 ISR(PCINT1_vect)
 {
-  static uint8_t enc_bits = 0b0011;
-  static int8_t enc_cycle = 0;
+    // indexed by bits [prevB prevA curB curA], indicates the direction of rotation
+    // or 0 for no change/bouncing state
+    static const int8_t enc_states[] PROGMEM = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};
 
-  // indexed by bits [prevB prevA curB curA], indicates the direction of rotation
-  // or 0 for no change/bouncing state
-  static const int8_t enc_states[] PROGMEM = {0,1,-1,0,-1,0,0,1,1,0,0,-1,0,-1,1,0};
-  enc_bits <<= 2;
-  enc_bits |= (PINC & 0b11);
-  enc_bits &= 0b1111;
-  enc_cycle += pgm_read_byte(&enc_states[enc_bits]);
+    static uint8_t enc_hist = 0b11;
+    static int8_t enc_cycle = 0;
 
-  // see if we've moved from detent to detent, and record the tick
-  if(enc_cycle > 3) {
-    encoder_ticks += ENC_CW;
-    enc_cycle = 0;
-  } else if(enc_cycle < -3) {
-    encoder_ticks -= ENC_CW;
-    enc_cycle = 0;
-  }
+    uint8_t enc_bits = (PINC & 0b11);
+    enc_hist <<= 2;
+    enc_hist |= enc_bits;
+
+    enc_cycle += pgm_read_byte(&enc_states[enc_hist & 0b1111]);
+
+    // see if we've moved from detent to detent, and record the tick
+    if (enc_bits == 0b11) {
+        if(enc_cycle > 3) {
+            encoder_ticks += ENC_CW;
+            enc_cycle = 0;
+        } else if(enc_cycle < -3) {
+            encoder_ticks -= ENC_CW;
+            enc_cycle = 0;
+        }
+    }
 }
 
 // here's how button presses work:
@@ -56,21 +59,35 @@ ISR(PCINT1_vect)
 // - a hold is registered when the same button has been down
 //   for a specified number of cycles.  the button release
 //   following the hold does not register.
+// - if async button state is queried, any pending event is suppressed
+//   (this is used for click+turn navigation)
 
-#define REPEAT_THRESHOLD 15
+#define REPEAT_THRESHOLD 20
 
-uint8_t GetButtons()
+uint8_t GetButtons(uint8_t async)
 {
     static uint8_t prevState = 0xff;
     static uint8_t repeat = 0;
 
     uint8_t curState = BUTTON_STATE();
 
+    if (async) {
+        repeat = REPEAT_THRESHOLD;
+        return (~curState & 0x7);
+    }
+
     // if we've already registered a "hold"
     if (repeat >= REPEAT_THRESHOLD) {
-        prevState = curState;
         if (curState == 0x7)
             repeat = 0;    // no buttons are down.
+        prevState = curState;
+        return 0;
+    }
+
+    // if the encoder moves while a button is held, suppress the event
+    if (encoder_ticks && (curState != 0x7)) {
+        repeat = REPEAT_THRESHOLD;
+        prevState = curState;
         return 0;
     }
 
@@ -96,8 +113,14 @@ void input_poll(uint8_t *button_mask, int8_t *encoder_diff)
         sleep_mode();
     }
     input_ready = 0;
-    *button_mask = GetButtons();
-    *encoder_diff = encoder_ticks;
+    uint8_t button_state = GetButtons(encoder_ticks);
+    if (encoder_ticks && button_state) {
+        *button_mask = (encoder_ticks > 0) ? BUTTON_SELECT : BUTTON_BACK;
+        *encoder_diff = 0;
+    } else {
+        *button_mask = button_state;
+        *encoder_diff = encoder_ticks;
+    }
     encoder_ticks = 0;
 }
 

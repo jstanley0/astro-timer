@@ -201,6 +201,8 @@ void run()
             DisplayNum(stime[1], LOW_POS, 0, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_DELAY;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_BRIGHT;
             } else if (buttons & BUTTON_SET) {
                 state = ST_TIME_SET_MINS;
             } else if (encoder_diff) {
@@ -213,6 +215,8 @@ void run()
             DisplayNum(delay[1], LOW_POS, 0, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_COUNT;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_TIME;
             } else if (buttons & BUTTON_SET) {
                 state = ST_DELAY_SET_MINS;
             } else if (encoder_diff) {
@@ -223,6 +227,8 @@ void run()
             DisplayAlnum(LETTER_C, count, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_MLU;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_DELAY;
             } else if (buttons & BUTTON_SET) {
                 state = ST_COUNT_SET;
             } else if (encoder_diff) {
@@ -233,6 +239,8 @@ void run()
             DisplayAlnum(LETTER_L, mlu, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_HPRESS;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_COUNT;
             } else if (buttons & BUTTON_SET) {
                 state = ST_MLU_SET;
             } else if (encoder_diff) {
@@ -260,6 +268,8 @@ void run()
             }
             if (buttons & BUTTON_SELECT) {
                 state = ST_BRIGHT;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_MLU;
             } else if (buttons & BUTTON_SET) {
                 hpress += 1;
                 if (hpress > 2) hpress = 0;
@@ -271,6 +281,8 @@ void run()
             DisplayAlnum(LETTER_B, 6 - bright, 0, 0);
             if (buttons & BUTTON_SELECT) {
                 state = ST_TIME;
+            } else if (buttons & BUTTON_BACK) {
+                state = ST_HPRESS;
             } else if (encoder_diff) {
                 adjust_brightness(encoder_diff);
                 display_set_brightness(bright);
@@ -378,7 +390,6 @@ void run()
         case ST_RUN_PRIME:
             if (hpress > 1 || (hpress == 1 && remaining == count)) {
                 SHUTTER_HALFPRESS_ON();
-                display[EXTRA_POS] &= APOS;
                 gMin = 0;
                 gSec = 1;
                 gDirection = -1;
@@ -452,6 +463,11 @@ void run()
             }
             break;
         case ST_HPRESS_WAIT:
+            if (TCNT2 & 0x40) {
+                display[EXTRA_POS] |= ~APOS;
+            } else {
+                display[EXTRA_POS] &= APOS;
+            }
             if (gDirection == 0) {
                 clock_stop();
                 state = ST_HPRESS_COMPLETE;
