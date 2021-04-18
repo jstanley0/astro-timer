@@ -59,3 +59,5 @@ Exposure Timer MkII TODO:
 
 [ ] come up with temperature calibration??
 
+[x] wake up mode, with the half-press line
+

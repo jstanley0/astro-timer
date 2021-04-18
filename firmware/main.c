@@ -114,7 +114,7 @@ void display_signature_byte(uint8_t addr)
 
 enum State {
     // main exposure menu
-    ST_TIME, ST_DELAY, ST_COUNT, ST_MLU,
+    ST_TIME, ST_DELAY, ST_COUNT, ST_MLU, ST_HPRESS,
     // options
     ST_BRIGHT, ST_SAVED, ST_POWER_METER,
     ST_TEMP_SENSOR, ST_SIGNATURE_ROW,
@@ -123,8 +123,8 @@ enum State {
     ST_DELAY_SET_MINS, ST_DELAY_SET_SECS,
     ST_COUNT_SET, ST_MLU_SET,
     // run states
-    ST_RUN_PRIME, ST_RUN_MANUAL,
-    ST_MLU_PRIME, ST_MLU_WAIT,
+    ST_RUN_PRIME, ST_HPRESS_COMPLETE, ST_RUN_MANUAL,
+    ST_MLU_PRIME, ST_MLU_WAIT, ST_HPRESS_WAIT,
     ST_RUN_AUTO, ST_WAIT
 };
 
@@ -148,6 +148,7 @@ void InitRun(enum State *state)
 
     // open the shutter and start the clock
     SHUTTER_ON();
+    SHUTTER_HALFPRESS_OFF();
     clock_start();
 }
 
@@ -230,11 +231,39 @@ void run()
         case ST_MLU:
             DisplayAlnum(LETTER_L, mlu, 0, 0);
             if (buttons & BUTTON_SELECT) {
-                state = ST_BRIGHT;
+                state = ST_HPRESS;
             } else if (buttons & BUTTON_SET) {
                 state = ST_MLU_SET;
             } else if (encoder_diff) {
                 increment_num(&mlu, encoder_diff, 99);
+            }
+            break;
+        case ST_HPRESS:
+            display[0] = LETTER_H & DECIMAL;
+            switch(hpress) {
+            case 0:
+                display[1] = LETTER_O;
+                display[2] = LETTER_F;
+                display[3] = LETTER_F;
+                break;
+            case 1:
+                display[1] = LETTER_1;
+                display[2] = LETTER_S;
+                display[3] = LETTER_T;
+                break;
+            case 2:
+                display[1] = LETTER_A;
+                display[2] = LETTER_L;
+                display[3] = LETTER_L;
+                break;
+            }
+            if (buttons & BUTTON_SELECT) {
+                state = ST_BRIGHT;
+            } else if (buttons & BUTTON_SET) {
+                hpress += 1;
+                if (hpress > 2) hpress = 0;
+            } else if (encoder_diff) {
+                increment_num(&hpress, encoder_diff, 2);
             }
             break;
         case ST_BRIGHT:
@@ -346,6 +375,18 @@ void run()
             }
             break;
         case ST_RUN_PRIME:
+            if (hpress > 1 || (hpress == 1 && remaining == count)) {
+                SHUTTER_HALFPRESS_ON();
+                display[EXTRA_POS] &= APOS;
+                gMin = 0;
+                gSec = 1;
+                gDirection = -1;
+                clock_start();
+                state = ST_HPRESS_WAIT;
+                break;
+            }
+            // fall through
+        case ST_HPRESS_COMPLETE:
             if (mlu > 0) {
                 state = ST_MLU_PRIME;
                 SHUTTER_ON();
@@ -359,6 +400,7 @@ void run()
             if (gDirection == 0) {
                 // time has elapsed.  close the shutter and stop the timer.
                 SHUTTER_OFF();
+                SHUTTER_HALFPRESS_OFF();
                 clock_stop();
 
                 if (remaining > 0)
@@ -408,6 +450,13 @@ void run()
                 goto newstate;
             }
             break;
+        case ST_HPRESS_WAIT:
+            if (gDirection == 0) {
+                clock_stop();
+                state = ST_HPRESS_COMPLETE;
+                goto newstate;
+            }
+            break;
         case ST_WAIT:
             if (cmode == 0) {
                 // wait time
@@ -441,6 +490,7 @@ void run()
             if (buttons & BUTTON_START) {
                 // canceled.
                 clock_stop();
+                SHUTTER_HALFPRESS_OFF();
                 SHUTTER_OFF();
 
                 // if counting up, freeze the count here

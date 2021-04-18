@@ -6,10 +6,11 @@ uint8_t delay[2] = { 0, 0 };
 uint8_t count    = 1;
 uint8_t mlu      = 0;
 uint8_t bright   = 2;
+uint8_t hpress   = 1;
 
 inline void savebyte(uint16_t addr, uint8_t value)
 {
-    eeprom_write_byte((uint8_t *)addr, value);
+    eeprom_update_byte((uint8_t *)addr, value);
 }
 
 uint8_t loadbyte(uint16_t addr, uint8_t default_value, uint8_t max_value)
@@ -29,6 +30,7 @@ void Save()
     savebyte(4, count);
     savebyte(5, mlu);
     savebyte(6, bright);
+    savebyte(7, hpress);
 }
 
 void Load()
@@ -40,4 +42,5 @@ void Load()
     count    = loadbyte(4, 10, 99);
     mlu      = loadbyte(5, 0, 99);
     bright   = loadbyte(6, 2, 5);
+    hpress   = loadbyte(7, 1, 2);
 }
