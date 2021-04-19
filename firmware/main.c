@@ -198,6 +198,7 @@ void run()
     uint8_t sig = 0;
     uint8_t main_menu_idx = 0;
     uint8_t opts_menu_idx = 0;
+    uint8_t exp_count = 0;
 
     for(;;)
     {
@@ -264,6 +265,7 @@ void run()
                 // start exposure sequence
                 prevstate = state;
                 remaining = count;
+                exp_count = 0;
                 cmode = (state == ST_COUNT);
                 buttons = 0;
                 state = ST_RUN_PRIME;
@@ -476,6 +478,7 @@ void run()
                     }
                 }
 
+                ++exp_count;
                 gMin = delay[0];
                 gSec = delay[1];
                 gDirection = -1;
@@ -490,8 +493,8 @@ void run()
                 DisplayNum(gMin, HIGH_POS, 0, 3, 0);
                 DisplayNum(gSec, LOW_POS, 0, 0, 1);
             } else {
-                // remaining exposures
-                DisplayAlnum(LETTER_C, remaining, 0, 1);
+                // remaining exposures, or count done so far, if unlimited
+                DisplayAlnum(LETTER_C, remaining ? remaining : exp_count, 0, 1);
             }
             display[EXTRA_POS] = CLOCK_BLINKING() ? EMPTY : COLON;
             break;
@@ -532,7 +535,7 @@ void run()
                 // except, if there are < 10 seconds to go, we will borrow
                 // the minutes field to display the remaining exposure count as well
                 if (gMin == 0 && gSec < 10) {
-                    DisplayNum(remaining, HIGH_POS, 0, 1, CLOCK_BLINKING() ? 0 : 1);
+                    DisplayNum(remaining ? remaining : exp_count, HIGH_POS, 0, 1, CLOCK_BLINKING() ? 0 : 1);
                     DisplayNum(gSec, LOW_POS, 0, 1, 0);
                 } else {
                     DisplayNum(gMin, HIGH_POS, 0, 3, CLOCK_BLINKING() ? 0 : 1);
@@ -540,7 +543,7 @@ void run()
                 }
             } else {
                 // remaining exposures
-                DisplayAlnum(LETTER_C, remaining, 0, CLOCK_BLINKING() ? 0 : 4);
+                DisplayAlnum(LETTER_C, remaining ? remaining : exp_count, 0, CLOCK_BLINKING() ? 0 : 4);
             }
             display[EXTRA_POS] = EMPTY;
             if (gDirection == 0)
@@ -563,14 +566,8 @@ void run()
                 SHUTTER_OFF();
                 display[EXTRA_POS] |= ~APOS;
 
-                // if counting up, freeze the count here
-                if (state == ST_RUN_MANUAL) {
-                    stime[0] = gMin;
-                    stime[1] = gSec;
-                }
-
                 state = cmode ? ST_COUNT : prevstate;
-            } else if ((count > 1) && (buttons & BUTTON_SELECT)) {
+            } else if (buttons & BUTTON_SELECT) {
                 // toggle display, time left vs. count left
                 cmode ^= 1;
             } else if (buttons & BUTTON_SET || encoder_diff) {
