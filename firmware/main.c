@@ -99,9 +99,12 @@ void adjust_brightness(int8_t encoder_diff)
     int8_t diff = encoder_diff ? encoder_diff : 1;
     int8_t new_val = (int8_t)bright - diff;
     while (new_val < 0)
-        new_val += 6;
-    while (new_val > 5)
-        new_val -= 6;
+        if (encoder_diff == 0)
+            new_val += 6;   // wrap if pushing buttons
+        else
+            new_val = 0;    // clamp if turning encoder
+    if (new_val > 5)
+        new_val = 5;
     bright = (uint8_t)new_val;
     display_set_brightness(bright);
 }
