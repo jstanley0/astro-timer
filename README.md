@@ -22,17 +22,22 @@ Controls (from left to right):
 
 Usage:
  - The select button cycles between parameters (exposure length, time between
-   exposures, exposure count, mirror lockup time, brightness)
+   exposures, exposure count, mirror lockup time, half-press setting, and the options submenu).
+   Alternatively, you can press Select and rotate the knob to move through
+   this menu in either direction.
  - When rotated, the fancy control knob adjusts the currently visible parameter.
    If this parameter is exposure length or time between exposures, it adjusts
    it one stop at a time. It is possible to set the minutes and seconds to
    arbitrary values via the Set button.
- - When pressed, the fancy control knob starts or stops the exposure sequence.
+ - When pressed in the main menu, the fancy control knob starts or stops the exposure sequence.
+ - When pressed in the options submenu, the knob returns to the main menu.
+ - You can adjust display brightness at any time by holding Set and turning the knob.
+ - Press Set while looking at "Opts" to save current settings.
  - While the exposure sequence is running,
-   - The set button adjusts the screen brightness.
+   - The set button or control knob adjust the display brightness.
    - The select button toggles between displaying remaning time vs remaining
      exposure count.
-
+ 
 Parts:
  - Atmel ATMEGA328P microcontroller (a prior version used ATMEGA48 and the code 
    still fits, but my original hardware was lost and my PCB house could surface-

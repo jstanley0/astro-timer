@@ -114,11 +114,11 @@ void display_signature_byte(uint8_t addr)
 }
 
 enum State {
-    // main exposure menu
-    ST_TIME, ST_DELAY, ST_COUNT, ST_MLU, ST_HPRESS,
-    // options
-    ST_BRIGHT, ST_SAVED, ST_POWER_METER,
-    ST_TEMP_SENSOR, ST_SIGNATURE_ROW,
+    // main menu
+    ST_TIME, ST_DELAY, ST_COUNT, ST_OPTS,
+    // options menu
+    ST_MLU, ST_HPRESS, ST_BRIGHT, ST_ENCODER_DIR, ST_POWER_METER,
+    ST_TEMP_SENSOR, ST_SIGNATURE_ROW, ST_SAVED,
     // edit states
     ST_TIME_SET_MINS, ST_TIME_SET_SECS,
     ST_DELAY_SET_MINS, ST_DELAY_SET_SECS,
@@ -128,6 +128,12 @@ enum State {
     ST_MLU_PRIME, ST_MLU_WAIT, ST_HPRESS_WAIT,
     ST_RUN_AUTO, ST_WAIT
 };
+
+const uint8_t main_menu[] PROGMEM = { ST_TIME, ST_DELAY, ST_COUNT, ST_OPTS };
+const uint8_t MAIN_MENU_SIZE = sizeof(main_menu) / sizeof(main_menu[0]);
+
+const uint8_t opts_menu[] PROGMEM = { ST_MLU, ST_HPRESS, ST_BRIGHT, ST_ENCODER_DIR, ST_POWER_METER, ST_TEMP_SENSOR, ST_SIGNATURE_ROW };
+const uint8_t OPTS_MENU_SIZE = sizeof(opts_menu) / sizeof(opts_menu[0]);
 
 void InitRun(enum State *state)
 {
@@ -149,8 +155,31 @@ void InitRun(enum State *state)
 
     // open the shutter and start the clock
     SHUTTER_ON();
-    SHUTTER_HALFPRESS_OFF();
     clock_start();
+}
+
+uint8_t init_opts_state(enum State state)
+{
+    switch(state)
+    {
+    case ST_POWER_METER:
+        turn_adc_on();
+        init_power_meter();
+        return 1;
+    case ST_TEMP_SENSOR:
+        turn_adc_on();
+        init_temp_sensor();
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+void exit_opts_state(enum State state)
+{
+    if (state == ST_POWER_METER || state == ST_TEMP_SENSOR) {
+        turn_adc_off();
+    }
 }
 
 void run()
@@ -164,6 +193,8 @@ void run()
     int8_t delay_stop = -1;
     uint16_t idle_cycles = 0;
     uint8_t sig = 0;
+    uint8_t main_menu_idx = 0;
+    uint8_t opts_menu_idx = 0;
 
     for(;;)
     {
@@ -194,13 +225,51 @@ void run()
             continue;
         }
 
-        // start exposure sequence
-        if ((buttons & BUTTON_START) && (state < ST_BRIGHT)) {
-            prevstate = state;
-            remaining = count;
-            cmode = (state == ST_COUNT);
-            buttons = 0;
-            state = ST_RUN_PRIME;
+        // general navigation
+        if (buttons & (BUTTON_SELECT | BUTTON_BACK)) {
+            if (state <= ST_OPTS) {
+                if (buttons & BUTTON_SELECT) {
+                    if (++main_menu_idx >= MAIN_MENU_SIZE)
+                        main_menu_idx = 0;
+                } else if (buttons & BUTTON_BACK) {
+                    if (main_menu_idx == 0)
+                        main_menu_idx = MAIN_MENU_SIZE - 1;
+                    else
+                        --main_menu_idx;
+                }
+                state = pgm_read_byte(&main_menu[main_menu_idx]);
+                buttons = 0;
+            } else if (state < ST_SAVED) {
+                if (buttons & BUTTON_SELECT) {
+                    if (++opts_menu_idx >= OPTS_MENU_SIZE)
+                        opts_menu_idx = 0;
+                } else if (buttons & BUTTON_BACK) {
+                    if (opts_menu_idx == 0)
+                        opts_menu_idx = OPTS_MENU_SIZE - 1;
+                    else
+                        --opts_menu_idx;
+                }
+                exit_opts_state(state);
+                state = pgm_read_byte(&opts_menu[opts_menu_idx]);
+                init_opts_state(state);
+                buttons = 0;
+            }
+        }
+
+        if (buttons & BUTTON_START) {
+            if (state < ST_OPTS) {
+                // start exposure sequence
+                prevstate = state;
+                remaining = count;
+                cmode = (state == ST_COUNT);
+                buttons = 0;
+                state = ST_RUN_PRIME;
+            } else if (state > ST_OPTS && state < ST_SAVED) {
+                // leave options submenu
+                exit_opts_state(state);
+                buttons = 0;
+                state = ST_OPTS;
+            }
         }
 
     newstate:
@@ -210,11 +279,7 @@ void run()
             DisplayNum(stime[0], HIGH_POS, 0, 3, 0);
             display[EXTRA_POS] = COLON;
             DisplayNum(stime[1], LOW_POS, 0, 0, 0);
-            if (buttons & BUTTON_SELECT) {
-                state = ST_DELAY;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_BRIGHT;
-            } else if (buttons & BUTTON_SET) {
+            if (buttons & BUTTON_SET) {
                 state = ST_TIME_SET_MINS;
             } else if (encoder_diff) {
                 adjust_stop(stime, &stime_stop, encoder_diff);
@@ -224,11 +289,7 @@ void run()
             DisplayNum(delay[0], HIGH_POS, 0, 3, 1);
             display[EXTRA_POS] = EMPTY;
             DisplayNum(delay[1], LOW_POS, 0, 0, 0);
-            if (buttons & BUTTON_SELECT) {
-                state = ST_COUNT;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_TIME;
-            } else if (buttons & BUTTON_SET) {
+            if (buttons & BUTTON_SET) {
                 state = ST_DELAY_SET_MINS;
             } else if (encoder_diff) {
                 adjust_stop(delay, &delay_stop, encoder_diff);
@@ -236,23 +297,41 @@ void run()
             break;
         case ST_COUNT:
             DisplayAlnum(LETTER_C, count, 0, 0);
-            if (buttons & BUTTON_SELECT) {
-                state = ST_MLU;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_DELAY;
-            } else if (buttons & BUTTON_SET) {
+            if (buttons & BUTTON_SET) {
                 state = ST_COUNT_SET;
             } else if (encoder_diff) {
                 increment_num(&count, encoder_diff, 99);
             }
             break;
+        case ST_OPTS:
+            display[0] = LETTER_O;
+            display[1] = LETTER_P;
+            display[2] = LETTER_T;
+            display[3] = LETTER_S;
+            display[EXTRA_POS] = EMPTY;
+            if (buttons & BUTTON_START) {
+                state = pgm_read_byte(&opts_menu[opts_menu_idx]);
+                init_opts_state(state);
+            } else if (buttons & BUTTON_SET) {
+                Save();
+                prevstate = state;
+                state = ST_SAVED;
+                remaining = 15;
+            }
+            break;
+        case ST_SAVED:
+            display[0] = LETTER_S;
+            display[1] = LETTER_A;
+            display[2] = LETTER_V;
+            display[3] = LETTER_E;
+            display[4] = EMPTY;
+            if (--remaining == 0)
+                state = prevstate;
+            break;
+        // -- options submenu
         case ST_MLU:
             DisplayAlnum(LETTER_L, mlu, 0, 0);
-            if (buttons & BUTTON_SELECT) {
-                state = ST_HPRESS;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_COUNT;
-            } else if (buttons & BUTTON_SET) {
+            if (buttons & BUTTON_SET) {
                 state = ST_MLU_SET;
             } else if (encoder_diff) {
                 increment_num(&mlu, encoder_diff, 99);
@@ -277,11 +356,7 @@ void run()
                 display[3] = LETTER_L;
                 break;
             }
-            if (buttons & BUTTON_SELECT) {
-                state = ST_BRIGHT;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_MLU;
-            } else if (buttons & BUTTON_SET) {
+            if (buttons & BUTTON_SET) {
                 hpress += 1;
                 if (hpress > 2) hpress = 0;
             } else if (encoder_diff) {
@@ -290,61 +365,30 @@ void run()
             break;
         case ST_BRIGHT:
             DisplayAlnum(LETTER_B, 6 - bright, 0, 0);
-            if (buttons & BUTTON_SELECT) {
-                state = ST_TIME;
-            } else if (buttons & BUTTON_BACK) {
-                state = ST_HPRESS;
-            } else if (encoder_diff) {
+            if ((buttons & BUTTON_SET) || encoder_diff) {
                 adjust_brightness(encoder_diff);
-            } else if (buttons & BUTTON_START) {
-                turn_adc_on();
-                init_power_meter();
-                state = ST_POWER_METER;
-            } else if (buttons & BUTTON_SET) {
-                Save();
-                prevstate = state;
-                state = ST_SAVED;
-                remaining = 15;
             }
             break;
-        case ST_SAVED:
-            display[0] = LETTER_S;
-            display[1] = LETTER_A;
-            display[2] = LETTER_V;
-            display[3] = LETTER_E;
-            display[4] = EMPTY;
-            if (--remaining == 0)
-                state = prevstate;
+        case ST_ENCODER_DIR:
+            display[0] = LETTER_E;
+            display[1] = EMPTY;
+            display[2] = (enc_cw < 0) ? MINUS_SIGN : EMPTY;
+            display[3] = LETTER_1;
+            if ((buttons & BUTTON_SET) || encoder_diff) {
+                enc_cw = -enc_cw;
+            }
             break;
         case ST_POWER_METER:
             display_power_meter();
-            if (buttons & BUTTON_SELECT) {
-                turn_adc_off();
-                state = ST_TIME;
-            } else if (buttons & BUTTON_START) {
-                init_temp_sensor();
-                state = ST_TEMP_SENSOR;
-            }
             break;
         case ST_TEMP_SENSOR:
             display_temp_sensor();
-            if (buttons & BUTTON_SELECT) {
-                turn_adc_off();
-                state = ST_TIME;
-            } else if (buttons & BUTTON_START) {
-                turn_adc_off();
-                state = ST_SIGNATURE_ROW;
-            }
             break;
         case ST_SIGNATURE_ROW:
-            display_signature_byte(sig);
             sig = (sig + encoder_diff) & 0x1f;
-            if (buttons & BUTTON_START) {
-                state = ST_BRIGHT;
-            } else if (buttons & BUTTON_SELECT) {
-                state = ST_TIME;
-            }
+            display_signature_byte(sig);
             break;
+        // -- end options submenu
         case ST_TIME_SET_MINS:
             DisplayNum(stime[0], HIGH_POS, 0x40, 0, 0);
             display[EXTRA_POS] = COLON;
@@ -415,8 +459,8 @@ void run()
         case ST_RUN_AUTO:
             if (gDirection == 0) {
                 // time has elapsed.  close the shutter and stop the timer.
-                SHUTTER_OFF();
                 SHUTTER_HALFPRESS_OFF();
+                SHUTTER_OFF();
                 clock_stop();
 
                 if (remaining > 0)
@@ -449,6 +493,7 @@ void run()
             display[EXTRA_POS] = CLOCK_BLINKING() ? EMPTY : COLON;
             break;
         case ST_MLU_PRIME:
+            SHUTTER_HALFPRESS_OFF();
             SHUTTER_OFF();
             gMin = 0;
             gSec = mlu;

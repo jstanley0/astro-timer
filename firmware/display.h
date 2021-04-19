@@ -19,6 +19,7 @@ volatile uint8_t display[5];
 #define LETTER_H 0b10010001
 #define LETTER_1 0b10011111
 #define LETTER_T 0b11100001
+#define LETTER_P 0b00110001
 #define DECIMAL  0b11111110
 #define MINUS_SIGN 0b11111101
 

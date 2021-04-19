@@ -1,14 +1,11 @@
 DEVICE     = atmega328p
 CLOCK      = 2000000
-PROGRAMMER = -c usbtiny
 OBJECTS    = main.o clock.o display.o input.o io.o settings.o sensors.o
-FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m
+FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xD1:m -U efuse:w:0xFF:m
 
-# use `make -e ENC_CW=-1` if the encoder ticks the opposite direction from what you expect
-ENC_CW = 1
-
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) -B 5
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -DENC_CW=$(ENC_CW) -mmcu=$(DEVICE)
+# specify a programmer in ~/.avrduderc
+AVRDUDE = avrdude -p $(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
 all:	main.hex

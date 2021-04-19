@@ -71,4 +71,21 @@ Exposure Timer MkII TODO:
 
 [x] global brightness adjust by holding Set + turning the knob
 
+[x] table-driven menu navigation (get rid of the error-prone navigation boilerplate!)
+
+[x] make encoder direction configurable on-device so I don't need to flash different firmware
+    with an encoder where B leads A
+
+[x] use EESAVE so settings are preserved on program updates
+
+[x] fix half-press bug (if half-press line is asserted when starting an exposure, and then released
+    after the full-press line is asserted, the camera stops a bulb exposure; so be like a remote
+    switch and keep the former asserted for the duration of the shot, if using it at all)
+
+[x] break less-used things into an options submenu
+
+[x] remember position in opts submenu
+
+
+
 

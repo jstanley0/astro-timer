@@ -7,6 +7,7 @@ uint8_t count    = 1;
 uint8_t mlu      = 0;
 uint8_t bright   = 2;
 uint8_t hpress   = 1;
+int8_t  enc_cw   = 1;
 
 inline void savebyte(uint16_t addr, uint8_t value)
 {
@@ -31,6 +32,7 @@ void Save()
     savebyte(5, mlu);
     savebyte(6, bright);
     savebyte(7, hpress);
+    savebyte(8, enc_cw > 0 ? 1 : 0);
 }
 
 void Load()
@@ -43,4 +45,6 @@ void Load()
     mlu      = loadbyte(5, 0, 99);
     bright   = loadbyte(6, 2, 5);
     hpress   = loadbyte(7, 1, 2);
+    enc_cw   = (int8_t)loadbyte(8, 1, 1);
+    if (enc_cw == 0) --enc_cw;
 }

@@ -19,9 +19,6 @@ void io_init();
 // PORTC5    (output) = Camera shutter output (half-press)
 // PORTD0..7 (output) = Segment cathodes (PD7 = A, PD6 = B, ... PD0 = DP)
 
-// undefine when using a discrete encoder (vs breakout board with integrated pullup resistors)
-//#define EXTERNAL_ENCODER_PULLUPS
-
 // for portability, please put all explicit port references here and init_io()
 #define DIGITS_OFF()   PORTB &= 0b11100000;
 #define DIGIT_ON(x)    PORTB |= (1 << x)

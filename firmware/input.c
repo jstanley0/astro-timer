@@ -2,6 +2,7 @@
 #include <avr/sleep.h>
 #include <avr/pgmspace.h>
 #include "input.h"
+#include "settings.h"
 #include "io.h"
 
 void input_init()
@@ -45,10 +46,10 @@ ISR(PCINT1_vect)
     // see if we've moved from detent to detent, and record the tick
     if (enc_bits == 0b11) {
         if(enc_cycle > 3) {
-            encoder_ticks += ENC_CW;
+            encoder_ticks += enc_cw;
             enc_cycle = 0;
         } else if(enc_cycle < -3) {
-            encoder_ticks -= ENC_CW;
+            encoder_ticks -= enc_cw;
             enc_cycle = 0;
         }
     }

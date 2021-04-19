@@ -6,6 +6,6 @@ extern uint8_t count;
 extern uint8_t mlu;
 extern uint8_t bright;
 extern uint8_t hpress;
-
+extern int8_t enc_cw;
 void Save();
 void Load();
