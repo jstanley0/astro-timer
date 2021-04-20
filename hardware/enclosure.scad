@@ -4,20 +4,21 @@
 pcb_width=65.9;
 pcb_length=41.4;
 
-pcb_margin=0.5;
+pcb_margin_y=1;
+pcb_margin_x=0.4;
 
 pcb_level=13.5;
 pcb_thickness=1.6;
 control_thickness=6.2;
 
-inside_width=pcb_width+pcb_margin*2;
-inside_length=pcb_length+pcb_margin*2;
+inside_width=pcb_width+pcb_margin_x*2;
+inside_length=pcb_length+pcb_margin_y*2;
 
 inside_height=pcb_level+pcb_thickness+control_thickness;
 
-wall_thickness=2;
+wall_thickness=1.65;
 floor_thickness=1.5;
-overlap_thickness=5;
+overlap_thickness=3.5;
 overlap_delta=0.25;
 
 screw_sep_x=59.13;
@@ -29,28 +30,28 @@ screw_depth=8;
 screw_ledge_depth=0.5;
 screw_ledge_r=3;
 
-standoff_int_r=1.4;
+standoff_int_r=1.45;
 standoff_ext_r=2.5;
-standoff_overlap=0.8;
+standoff_overlap=pcb_thickness+0.5;
 
-screw_spacer_int_r=2;
-standoff_spacer_int_r=1.75;
+spacer_int_r=1.65;
+spacer_int_h=1;
 spacer_ext_r=3;
 
 // note: offsets are relative to the bottom and right
     
 screen_offset_x=12.84;
 screen_offset_y=27.13;
-screen_width=46;
+screen_width=40.5;
 screen_height=12.88;
 screen_margin=0.5;
 screen_support_width=2;
-screen_support_thickness=3;
+screen_support_thickness=2;
 
 sw23_offset_y=5.64; // 5.74 in newest PCB design
 sw3_offset_x=33.31; // 33.29
 sw2_offset_x=42.36; // 41.98
-sw_radius=1.95;
+sw_radius=2;
 
 enc_offset_y=17.55;
 enc_offset_x=8.78;
@@ -76,34 +77,23 @@ jack_body_size_z=5.5;
 jack_body_offset_y=jack_offset_y-jack_body_size_y/2;
 
 isp_offset_x=45.46;
-isp_offset_y=-pcb_margin-wall_thickness-overlap_delta;
+isp_offset_y=-pcb_margin_y-wall_thickness-overlap_delta;
 isp_width=13.5;
 isp_height=10.5;
 
+snap_width=10;
+snap_height=2;
+snap_margin=0.75;
+snap_inset=13;
+
+
 module standoff_support(int_r, ext_r)
 {
-    dist = (inside_width-screw_sep_x)/2;
+    dist = (inside_length-screw_sep_y)/2;
     translate([-dist, -dist, 0]) {
         cube([dist+int_r, dist+int_r, pcb_level]);
         cube([dist+ext_r, dist, pcb_level]);
         cube([dist, dist+ext_r, pcb_level]);
-    }
-}
-
-
-module screw(rotation)
-{
-    rotate([0, 0, rotation])
-    difference()
-    {
-        union() {
-            cylinder(pcb_level, screw_ext_r, screw_ext_r, $fn=32);
-            standoff_support(screw_int_r, screw_ext_r);
-        }
-        translate([0, 0, pcb_level - screw_depth - screw_ledge_depth])
-            cylinder(screw_depth, screw_int_r, screw_int_r, $fn=24);
-        translate([0, 0, pcb_level - screw_ledge_depth])
-            cylinder(screw_ledge_depth, screw_ledge_r, screw_ledge_r, $fn=24);
     }
 }
 
@@ -115,6 +105,18 @@ module standoff(rotation)
         cylinder(pcb_level, standoff_ext_r, standoff_ext_r, $fn=32);
         cylinder(pcb_level + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);
         standoff_support(standoff_int_r, standoff_ext_r);
+    }
+}
+
+module snap(rotation)
+{
+    rotate([0, 0, rotation])
+    union()
+    {
+        cube([snap_width, wall_thickness, control_thickness], true);
+        translate([0, -snap_height/3, (control_thickness-snap_height)/2])
+            rotate([0, 90, 0])
+            cylinder(snap_width, snap_height/2, snap_height/2, true, $fn=12);
     }
 }
 
@@ -132,18 +134,29 @@ module box()
         cube([inside_width, inside_length, inside_height]);
 
         // jack
-        translate([inside_width, pcb_margin + jack_offset_y, pcb_level + pcb_thickness + jack_height])
+        translate([inside_width, pcb_margin_y + jack_offset_y, pcb_level + pcb_thickness + jack_height])
             rotate([0, 90, 0])
             cylinder(wall_thickness, jack_radius, jack_radius, $fn=28);
-        translate([inside_width + wall_thickness / 2, pcb_margin + jack_offset_y, pcb_level + pcb_thickness + jack_height + jack_radius/2])
+        translate([inside_width + wall_thickness / 2, pcb_margin_y + jack_offset_y, pcb_level + pcb_thickness + jack_height + jack_radius/2])
             cube([wall_thickness, jack_radius*2, jack_radius], true);
+        
+        // snap holes
+        translate([snap_inset, -wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
+        translate([inside_width-snap_inset, -wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
+        translate([snap_inset, inside_length+wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
+        translate([inside_width-snap_inset, inside_length+wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);        
+        
     }
     translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
         standoff(0);
     translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
-        screw(270);
+        standoff(270);
     translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
-        screw(90);
+        standoff(90);
     translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
         standoff(180);   
     
@@ -190,8 +203,8 @@ module lid()
                 cylinder(h, spacer_ext_r, spacer_ext_r, $fn=32);
             
             // screen support
-            translate([pcb_margin+screen_offset_x-screen_margin-screen_support_width,
-                       pcb_margin+screen_offset_y-screen_margin-screen_support_width,
+            translate([pcb_margin_x+screen_offset_x-screen_margin-screen_support_width,
+                       pcb_margin_y+screen_offset_y-screen_margin-screen_support_width,
                        0])
                 cube([screen_width+screen_support_width*2+screen_margin*2, screen_height+screen_support_width+screen_margin*2, screen_support_thickness]);
             
@@ -199,81 +212,101 @@ module lid()
         union()
         {
             // spacer int
-            h = floor_thickness + inside_height - pcb_level - pcb_thickness;
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, -floor_thickness])
-                cylinder(h, screw_spacer_int_r, screw_spacer_int_r, $fn=24);
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
-                cylinder(h, standoff_spacer_int_r, standoff_spacer_int_r, $fn=24);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
-                cylinder(h, standoff_spacer_int_r, standoff_spacer_int_r, $fn=24);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, -floor_thickness])
-                cylinder(h, screw_spacer_int_r, screw_spacer_int_r, $fn=24);
+            translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, control_thickness-spacer_int_h])
+                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
+            translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, control_thickness-spacer_int_h])
+                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
+            translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, control_thickness-spacer_int_h])
+                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
+            translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, control_thickness-spacer_int_h])
+                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
             
             // screen window
-            translate([pcb_margin + screen_offset_x - screen_margin,
-                       pcb_margin + screen_offset_y - screen_margin,
+            translate([pcb_margin_x + screen_offset_x - screen_margin,
+                       pcb_margin_y + screen_offset_y - screen_margin,
                        -floor_thickness])
                 cube([screen_width + screen_margin*2, screen_height + screen_margin*2, floor_thickness + overlap_thickness]);
                             
             // sw2 hole
-            translate([pcb_margin + sw2_offset_x,
-                       pcb_margin + sw23_offset_y,
+            translate([pcb_margin_x + sw2_offset_x,
+                       pcb_margin_y + sw23_offset_y,
                        -floor_thickness])
                cylinder(floor_thickness, sw_radius, sw_radius, $fn=16);
             
             
             // sw3 hole
-            translate([pcb_margin + sw3_offset_x,
-                       pcb_margin + sw23_offset_y,
+            translate([pcb_margin_x + sw3_offset_x,
+                       pcb_margin_y + sw23_offset_y,
                        -floor_thickness])
                cylinder(floor_thickness, sw_radius, sw_radius, $fn=16);            
             
             // enc hole
-            translate([pcb_margin + enc_offset_x,
-                       pcb_margin + enc_offset_y,
+            translate([pcb_margin_x + enc_offset_x,
+                       pcb_margin_y + enc_offset_y,
                        -floor_thickness])
                cylinder(floor_thickness, enc_radius, enc_radius, $fn=28);                 
             
             // enc dep
-            translate([pcb_margin + enc_offset_x,
-                       pcb_margin + enc_offset_y,
+            translate([pcb_margin_x + enc_offset_x,
+                       pcb_margin_y + enc_offset_y,
                        -enc_dep_thickness])
                cylinder(floor_thickness, enc_dep_radius, enc_dep_radius, $fn=36);
 
             // enc body (actually I believe this has no effect)
-            translate([pcb_margin + enc_offset_x - enc_body_width/2,
-                       pcb_margin + enc_offset_y - enc_body_height/2,
+            translate([pcb_margin_x + enc_offset_x - enc_body_width/2,
+                       pcb_margin_y + enc_offset_y - enc_body_height/2,
                        0])
                 cube([enc_body_width, enc_body_height, overlap_thickness]);
             
             // enc nub
-            translate([pcb_margin + enc_nub_offset_x,
-                       pcb_margin + enc_nub_offset_y,
+            translate([pcb_margin_x + enc_nub_offset_x,
+                       pcb_margin_y + enc_nub_offset_y,
                        -floor_thickness/2])
                cube([enc_nub_width, enc_nub_height, floor_thickness], true);                             
             
             // jack
-            translate([-wall_thickness, pcb_margin + jack_offset_y, control_thickness - jack_height])
+            translate([-wall_thickness, pcb_margin_y + jack_offset_y, control_thickness - jack_height])
                 rotate([0, 90, 0])
                 cylinder(wall_thickness*2+overlap_delta, jack_radius, jack_radius, $fn=28);
-            translate([wall_thickness/2 + overlap_delta, pcb_margin + jack_offset_y, control_thickness - jack_height + jack_radius/2])
+            translate([wall_thickness/2 + overlap_delta, pcb_margin_y + jack_offset_y, control_thickness - jack_height + jack_radius/2])
                 cube([wall_thickness, jack_radius*2, jack_radius], true);                
                 
             // jack body
             translate([wall_thickness + overlap_delta,
-                       pcb_margin + jack_body_offset_y,
+                       pcb_margin_y + jack_body_offset_y,
                        control_thickness - jack_body_size_z])
                cube([jack_body_size_x, jack_body_size_y, jack_body_size_z]);
+               
+            // snap holes
+            translate([snap_inset, overlap_delta+wall_thickness/2, control_thickness/2+snap_margin*2])
+                cube([snap_width+snap_margin, wall_thickness*2, control_thickness], true);
+            translate([inside_width-snap_inset, overlap_delta+wall_thickness/2, control_thickness/2+snap_margin*2])
+                cube([snap_width+snap_margin, wall_thickness*2, control_thickness], true);
+            translate([snap_inset, inside_length-overlap_delta-wall_thickness/2, control_thickness/2+snap_margin*2])
+                cube([snap_width+snap_margin, wall_thickness*2, control_thickness], true);
+            translate([inside_width-snap_inset, inside_length-overlap_delta-wall_thickness/2, control_thickness/2+snap_margin*2])
+                cube([snap_width+snap_margin, wall_thickness*2, control_thickness], true);            
                        
             
             // isp
-            //translate([pcb_margin + isp_offset_x,
-            //           pcb_margin + isp_offset_y,
+            //translate([pcb_margin_x + isp_offset_x,
+            //           pcb_margin_y + isp_offset_y,
             //           -floor_thickness])
             //   cube([isp_width, isp_height, floor_thickness+overlap_thickness]);
             
         }
     }
+    
+    // snap body
+    translate([snap_inset, overlap_delta+wall_thickness/2, control_thickness/2])
+        snap(0);
+    translate([inside_width-snap_inset, overlap_delta+wall_thickness/2, control_thickness/2])
+        snap(0);
+    translate([snap_inset, inside_length-overlap_delta-wall_thickness/2, control_thickness/2])
+        snap(180);
+    translate([inside_width-snap_inset, inside_length-overlap_delta-wall_thickness/2, control_thickness/2])
+        snap(180);
+    
 }
 
 box();
