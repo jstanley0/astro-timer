@@ -30,9 +30,9 @@ screw_depth=8;
 screw_ledge_depth=0.5;
 screw_ledge_r=3;
 
-standoff_int_r=1.45;
+standoff_int_r=1.5;
 standoff_ext_r=2.5;
-standoff_overlap=pcb_thickness+0.5;
+standoff_overlap=pcb_thickness*(3/8);
 
 spacer_int_r=1.65;
 spacer_int_h=1;
@@ -85,6 +85,7 @@ snap_width=10;
 snap_height=2;
 snap_margin=0.75;
 snap_inset=13;
+snap_ext_r=(snap_height + snap_margin) /2;
 
 
 module standoff_support(int_r, ext_r)
@@ -114,9 +115,9 @@ module snap(rotation)
     union()
     {
         cube([snap_width, wall_thickness, control_thickness], true);
-        translate([0, -snap_height/3, (control_thickness-snap_height)/2])
+        translate([0, overlap_delta-snap_height/3, (control_thickness-snap_height)/2])
             rotate([0, 90, 0])
-            cylinder(snap_width, snap_height/2, snap_height/2, true, $fn=12);
+            cylinder(snap_width, snap_height/2, snap_height/2, true, $fn=16);
     }
 }
 
@@ -141,15 +142,18 @@ module box()
             cube([wall_thickness, jack_radius*2, jack_radius], true);
         
         // snap holes
-        translate([snap_inset, -wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
-            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
-        translate([inside_width-snap_inset, -wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
-            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
-        translate([snap_inset, inside_length+wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
-            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);
-        translate([inside_width-snap_inset, inside_length+wall_thickness/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
-            cube([snap_width+snap_margin, wall_thickness, snap_height+snap_margin], true);        
-        
+        translate([snap_inset, pcb_margin_y/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            rotate([0, 90, 0])
+            cylinder(snap_width+snap_margin*2, snap_ext_r, snap_ext_r, true, $fn=16);
+        translate([inside_width-snap_inset, pcb_margin_y/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            rotate([0, 90, 0])
+            cylinder(snap_width+snap_margin*2, snap_ext_r, snap_ext_r, true, $fn=16);
+        translate([snap_inset, inside_length - pcb_margin_y/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            rotate([0, 90, 0])
+            cylinder(snap_width+snap_margin*2, snap_ext_r, snap_ext_r, true, $fn=16);
+        translate([inside_width-snap_inset, inside_length - pcb_margin_y/2, pcb_level + pcb_thickness + (snap_height + snap_margin)/2])
+            rotate([0, 90, 0])
+            cylinder(snap_width+snap_margin*2, snap_ext_r, snap_ext_r, true, $fn=16);        
     }
     translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
         standoff(0);
@@ -159,6 +163,11 @@ module box()
         standoff(90);
     translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
         standoff(180);   
+
+    // top-bottom shims, since I had to make the board a little bigger in Y to implement the snaps
+    cube([inside_width, pcb_margin_y-pcb_margin_x, pcb_level+pcb_thickness]);
+    translate([0, inside_length-(pcb_margin_y-pcb_margin_x), 0])
+    cube([inside_width, pcb_margin_y-pcb_margin_x, pcb_level+pcb_thickness]);
     
 }
 
@@ -191,16 +200,24 @@ module lid()
                     }
                 }
             }
-            // spacer ext
+            // spacer
             h = inside_height - pcb_level - pcb_thickness;
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
+            translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0]) {
                 cylinder(h, spacer_ext_r, spacer_ext_r, $fn=32);
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
+                cylinder(h + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);                
+            }
+            translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0]) {
                 cylinder(h, spacer_ext_r, spacer_ext_r, $fn=32);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0])
+                cylinder(h + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);                
+            }
+            translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, 0]) {
                 cylinder(h, spacer_ext_r, spacer_ext_r, $fn=32);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0])
+                cylinder(h + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);                
+            }
+            translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, 0]) {
                 cylinder(h, spacer_ext_r, spacer_ext_r, $fn=32);
+                cylinder(h + standoff_overlap, standoff_int_r, standoff_int_r, $fn=16);                
+            }
             
             // screen support
             translate([pcb_margin_x+screen_offset_x-screen_margin-screen_support_width,
@@ -211,16 +228,6 @@ module lid()
         }
         union()
         {
-            // spacer int
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 - screw_sep_y/2, control_thickness-spacer_int_h])
-                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
-            translate([inside_width/2 - screw_sep_x/2, inside_length/2 + screw_sep_y/2, control_thickness-spacer_int_h])
-                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 - screw_sep_y/2, control_thickness-spacer_int_h])
-                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
-            translate([inside_width/2 + screw_sep_x/2, inside_length/2 + screw_sep_y/2, control_thickness-spacer_int_h])
-                cylinder(spacer_int_h, spacer_int_r, spacer_int_r, $fn=24);
-            
             // screen window
             translate([pcb_margin_x + screen_offset_x - screen_margin,
                        pcb_margin_y + screen_offset_y - screen_margin,
