@@ -21,30 +21,39 @@ Controls (from left to right):
  - Fancy control knob
 
 Usage:
- - The select button cycles between parameters (exposure length, time between
-   exposures, exposure count, mirror lockup time, half-press setting, and the options submenu).
-   Alternatively, you can press Select and rotate the knob to move through
+ - Press the Select button to cycle between parameters (exposure length, time between
+   exposures, exposure count, and the options submenu).
+   Alternatively, you can hold Select and rotate the knob to move through
    this menu in either direction.
- - When rotated, the fancy control knob adjusts the currently visible parameter.
-   If this parameter is exposure length or time between exposures, it adjusts
-   it one stop at a time. It is possible to set the minutes and seconds to
-   arbitrary values via the Set button.
- - When pressed in the main menu, the fancy control knob starts or stops the exposure sequence.
- - When pressed in the options submenu, the knob returns to the main menu.
+ - The options submenu includes mirror lockup time, half-press setting (never,
+   first shot in a series, every shot), brightness, encoder knob direction,
+   and battery voltage).
+ - Rotate the fancy control knob to adjust the currently visible parameter.
+   If this parameter is exposure length or time between exposures, it will be adjusted
+   in discrete stops.
+ - It is possible to set the minutes and seconds to arbitrary values via the Set button.
+   Press Set and the minutes value will flash. Turn the knob to set it to any value, then
+   press Set again. The process will repeat for the seconds value.
+ - Press the control knob in to start an exposure sequence, or enter/exit the options submenu.
  - You can adjust display brightness at any time by holding Set and turning the knob.
- - Press Set while looking at "Opts" to save current settings.
+ - Press Set while looking at "Opts" to save current settings to non-volatile memory,
+   where they will persist after changing batteries, etc.
  - While the exposure sequence is running,
-   - The set button or control knob adjust the display brightness.
-   - The select button toggles between displaying remaning time vs remaining
+   - Turn the control knob adjust the display brightness.
+   - Press Select to toggle between displaying remaning time vs remaining
      exposure count.
+   - Push the control knob to stop the exposure sequence.
+ - Set the exposure count to 0 to take an unbounded number of shots. The counter will
+   show the number of exposures complete, rather than the number remaining
+   (i.e., counting up, not down).
+ - Push and hold the control knob to turn the device off. (Press any button to turn it
+   back on later.) The device will power itself down after 20 minutes of inactivity.
  
 Parts:
- - Atmel ATMEGA328P microcontroller (a prior version used ATMEGA48 and the code 
-   still fits, but my original hardware was lost and my PCB house could surface-
-   mount a '32 inexpensively)
- - 4-digit 7-segment LED display (code assumes common anode; PCB uses
-   COM-09483 from SparkFun, model YSD-439AR6B-35. The Lite-ON LTC-4627 and
-   Para Light A-394 should also be compatible).
+ - Atmel ATmega328P microcontroller (the program fits in ATmega88 or larger).
+ - 4-digit 7-segment LED display, common anode. The original PCB uses COM-09483 from SparkFun,
+   model YSD-439AR6B-35. Other compatible devices include Lite-ON LTC-4627, Para Light A-394,
+   Vishay TDCR1050M).
  - Suitable resistors to drive the LEDs (I use 470 ohms)
  - 3V power supply (e.g. 2x AAA batteries)
  - Two momentary-contact switches (Set and Select keys)
