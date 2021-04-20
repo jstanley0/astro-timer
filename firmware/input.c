@@ -100,7 +100,7 @@ uint8_t GetButtons(uint8_t async)
     } else if (curState != 0x7) {
         // button(s) are being held
         if (++repeat == REPEAT_THRESHOLD) {
-            return BUTTON_HOLD | ~(curState & 0x7);
+            return BUTTON_HOLD | (~curState & 0x7);
         }
     }
 
