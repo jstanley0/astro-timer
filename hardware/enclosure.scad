@@ -85,7 +85,7 @@ snap_width=10;
 snap_height=2;
 snap_margin=0.75;
 snap_inset=13;
-snap_ext_r=(snap_height + snap_margin) /2;
+snap_ext_r=(snap_height + overlap_delta)/2;
 
 
 module standoff_support(int_r, ext_r)
