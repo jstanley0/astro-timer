@@ -80,19 +80,25 @@ void power_down()
     // re-enable interrupts so we can actually wake up
     sei();
 
-    // power down!
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_mode();
+    for(;;) {
+        // power down!
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        sleep_mode();
 
-    // a pin-change interrupt woke us up.
-    // snooze for awhile to swallow the button release
-    // (but not _indefinitely_ in case the encoder stopped between detents or something)
-    for(uint8_t delay = 0; delay < 10; ++delay) {
-        _delay_ms(100);
-        if (0b00011111 == (PINC & 0b00011111))
+        // a pin-change interrupt woke us up.
+        // to avoid spurious wakeups in the camera bag, ensure *two* buttons are held for 300ms
+        // and snooze for awhile longer to swallow the button release
+        uint8_t hc = 0;
+        for(uint8_t delay = 0; delay < 15; ++delay) {
+            _delay_ms(50);
+            uint8_t buttons = (PINC & 0b00011100) >> 2;
+            if (buttons != 0b001 && buttons != 0b010 && buttons != 0b100)
+                break;
+            ++hc;
+        }
+        if (hc >= 6)
             break;
     }
-
     // restore prior state
     PCMSK1 = saved_PCMSK1;
     PCICR = saved_PCICR;
